@@ -654,7 +654,7 @@
       <div class="nav-pip" data-section="1" title="Constellations"></div>
       <div class="nav-pip" data-section="2" title="Marcus Cole"></div>
       <div class="nav-pip" data-section="3" title="Linda Okafor"></div>
-      <div class="nav-pip" data-section="4" title="The Pattern"></div>
+      <div class="nav-pip" data-section="4" title="Enter the Galaxy"></div>
     </div>
     <button class="nav-arrow" id="btn-next">&#8594;</button>
     
@@ -727,7 +727,7 @@
             'First jobs. First salaries. Nobody warned them that working like ' +
             'this would cost them something. ' +
             'They don\'t have burnout yet. Give it two years.',
-            '#FFD166'
+            '#FF6B9D'
           ), 900);
         }
       },
@@ -746,7 +746,7 @@
             'Calendars full, emails answered, never miss a deadline. ' +
             'Burnout at 5.19 out of 7. ' +
             'They would not describe themselves as burned out.',
-            '#FF6B9D'
+            '#00D4FF'
           ), 1000);
         }
       },
@@ -755,29 +755,31 @@
           hideAnnotation();
           api.hideStarfield();
           api.zoomOut(600);
-          schedule(() => api.morphLayout('stress-spectrum', 1000), 800);
         }
       },
       { id: 'section-6', label: 'Enter the Galaxy',
         onEnter: (api) => {
           hideAnnotation();
           api.hideStarfield();
-          api.morphLayout('similarity', 600);
-          setTimeout(() => {
-            api.zoomToCluster(0, 900);
-            setTimeout(() => api.highlightCluster(0), 400);
-          }, 500);
-          setTimeout(() => showAnnotation(
+          api.morphLayout('similarity', 800);
+          schedule(() => api.zoomToCluster(0, 1000), 900);
+          schedule(() => api.highlightCluster(0), 1400);
+          schedule(() => showAnnotation(
             '● BURNING MID-CAREER PROFESSIONALS',
             'They\'ve been around long enough to see the pattern. ' +
             'They just don\'t know what to do about it yet. ' +
             'This is the group that keeps the lights on — ' +
             'and pays the highest price for it.',
             '#00D4FF'
-          ), 1100);
+          ), 1800);
         }
       },
     ];
+
+    // Maps dot index → SECTIONS index
+    // Dot 4 jumps straight to section-6 (index 5), skipping section-5
+    const DOT_TO_SECTION = [0, 1, 2, 3, 5];
+    const SECTION_TO_DOT = [0, 1, 2, 3, -1, 4]; // -1 = section-5 has no dot
 
     const TOTAL = SECTIONS.length;
     let current = 0;
@@ -878,7 +880,8 @@
       const p = n => String(n).padStart(2, '0');
       navCounter.textContent = `${p(current + 1)} / ${p(TOTAL)}`;
       
-      pips.forEach((pip, i) => pip.classList.toggle('active', i === current));
+      const activeDot = SECTION_TO_DOT[current];
+      pips.forEach((pip, i) => pip.classList.toggle('active', i === activeDot));
       btnPrev.classList.toggle('disabled', current === 0);
       btnNext.classList.toggle('disabled', current === TOTAL - 1);
       btnNext.style.display = (current === TOTAL - 1) ? 'none' : 'flex';
@@ -891,7 +894,9 @@
 
     btnPrev.addEventListener('click', () => goTo(current - 1));
     btnNext.addEventListener('click', () => goTo(current + 1));
-    pips.forEach((pip, i) => pip.addEventListener('click', () => goTo(i)));
+    pips.forEach((pip, i) => pip.addEventListener('click', () => {
+      goTo(DOT_TO_SECTION[i]);
+    }));
 
     document.addEventListener('keydown', (e) => {
       if (e.key === 'ArrowRight') goTo(current + 1);
