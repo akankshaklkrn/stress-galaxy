@@ -1,0 +1,8 @@
+# Responsibility: Python dependencies for data processing and exploration notebooks used by "The Stress Galaxy".
+pandas
+numpy
+scikit-learn
+umap-learn
+matplotlib
+seaborn
+jupyter

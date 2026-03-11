@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Stress Galaxy — Explore</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+</head>
+<body class="explore-page">
+
+<div id="app">
+
+  <header id="header">
+    <div id="header-left">
+      <a class="back-to-story" href="index.html">← BACK TO STORY</a>
+      <div>
+        <div id="title">✦ THE STRESS GALAXY</div>
+        <div id="subtitle">5,000 WORKERS · GLOBAL WORKPLACE MENTAL HEALTH · 2025</div>
+      </div>
+
+      <div id="layout-controls">
+        <button class="layout-btn active" data-layout="similarity">GALAXY</button>
+        <button class="layout-btn" data-layout="stress-spectrum">STRESS AXIS</button>
+        <button class="layout-btn" data-layout="age-orbit">AGE ORBIT</button>
+        <button class="layout-btn" data-layout="work-hours-axis">DEMAND AXIS</button>
+      </div>
+    </div>
+
+    <div id="story-controls">
+      <button id="skip-story-btn">SKIP →</button>
+      <button id="story-btn">▶ PLAY STORY</button>
+    </div>
+  </header>
+
+  <div id="main-area">
+    <div id="galaxy-container">
+      <div id="interaction-lock"></div>
+      <div id="lasso-hint">⬡ Click + drag to lasso &nbsp;·&nbsp; Double-click to zoom out</div>
+    </div>
+
+    <div id="views-row">
+      <div class="view-panel">
+        <div class="view-panel-title">STRESS × WELLBEING — BUBBLE SIZE = BURNOUT</div>
+        <div class="view-panel-chart" id="bubble-chart"></div>
+      </div>
+      <div class="view-panel">
+        <div class="view-panel-title">AGE DISTRIBUTION BY CLUSTER</div>
+        <div class="view-panel-chart" id="age-ring"></div>
+      </div>
+      <div class="view-panel">
+        <div class="view-panel-title">AVG BURNOUT BY INDUSTRY</div>
+        <div class="view-panel-chart" id="burnout-bars"></div>
+      </div>
+    </div>
+  </div>
+
+  <aside id="sidebar">
+    <div class="panel">
+      <div class="panel-title">CONSTELLATIONS</div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:var(--c0)"></div>
+        <div>
+          <div class="legend-name">Burning Mid-Career Professionals</div>
+          <div class="legend-stats">n=1,497 · stress 2.67 · burnout 4.11</div>
+        </div>
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:var(--c1)"></div>
+        <div>
+          <div class="legend-name">Overworked Young & Unsupported</div>
+          <div class="legend-stats">n=1,771 · stress 3.05 · burnout 2.74</div>
+        </div>
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:var(--c2)"></div>
+        <div>
+          <div class="legend-name">Stable Seniors, Hidden Exhaustion</div>
+          <div class="legend-stats">n=1,732 · stress 1.79 · burnout 5.19</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">VISUAL ENCODING</div>
+      <div class="enc-row"><span class="enc-icon">◉</span> Node size → Stress level</div>
+      <div class="enc-row"><span class="enc-icon">●</span> Color → Cluster</div>
+      <div class="enc-row"><span class="enc-icon">◌</span> Opacity → Resources</div>
+      <div class="enc-row"><span class="enc-icon">⟳</span> Pulse speed → Burnout</div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">PARALLEL COORDINATES — LASSO TO FILTER</div>
+      <div id="parallel-coords"></div>
+    </div>
+
+    <div class="panel" style="padding:10px 15px">
+      <button id="toggle-fys">✦ FIND YOUR STAR</button>
+    </div>
+
+    <div id="find-your-star-panel" style="display:none"></div>
+  </aside>
+
+  <div id="stats-bar">Loading data...</div>
+</div>
+
+<div id="galaxy-tooltip"></div>
+<div id="tooltip" style="
+  position:fixed;pointer-events:none;opacity:0;
+  background:rgba(7,8,15,0.96);border:1px solid rgba(255,255,255,0.1);
+  border-radius:10px;padding:13px 15px;max-width:220px;
+  font-family:'Space Mono',monospace;font-size:10px;color:#e8e8f0;
+  transition:opacity 0.12s;z-index:1001;box-shadow:0 8px 40px rgba(0,0,0,0.65);
+"></div>
+
+<script type="module">
+  import { initGalaxy }         from "./js/galaxy.js";
+  import { initParallelCoords } from "./js/views.js";
+  import { initLinkedViews }    from "./js/linked-views.js";
+  import { initInteractions }   from "./js/interactions.js";
+
+  (async () => {
+    await initGalaxy();
+
+    const workers = window.galaxyAPI.getWorkers();
+    initParallelCoords(workers);
+
+    requestAnimationFrame(() => initLinkedViews(workers));
+    initInteractions();
+
+    const toggleBtn = document.getElementById("toggle-fys");
+    toggleBtn.addEventListener("click", () => {
+      const panel = document.getElementById("find-your-star-panel");
+      const open  = panel.style.display !== "none";
+      panel.style.display = open ? "none" : "block";
+      toggleBtn.textContent = open ? "✦ FIND YOUR STAR" : "✕ CLOSE";
+    });
+
+    if (location.hash === "#find") {
+      const panel = document.getElementById("find-your-star-panel");
+      panel.style.display = "block";
+      toggleBtn.textContent = "✕ CLOSE";
+    }
+  })();
+</script>
+
+</body>
+</html>
+

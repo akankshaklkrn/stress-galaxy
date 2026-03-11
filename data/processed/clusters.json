@@ -1,0 +1,107 @@
+[
+  {
+    "id": 0,
+    "name": "Burning Mid-Career Professionals",
+    "color": "#FFD166",
+    "count": 1497,
+    "centroid_x": 4.4628,
+    "centroid_y": 0.7273,
+    "avg_stress": 2.671,
+    "avg_burnout": 4.107,
+    "avg_wellbeing": 3.651,
+    "avg_sleep_strain": 2.631,
+    "avg_demands": 3.451,
+    "avg_resources": 3.26,
+    "industry_breakdown": {
+      "IT": 239,
+      "Healthcare": 232,
+      "Finance": 223,
+      "Consulting": 214,
+      "Manufacturing": 210,
+      "Retail": 191,
+      "Education": 188
+    },
+    "age_breakdown": {
+      "26-35": 425,
+      "36-45": 363,
+      "46-55": 302,
+      "18-25": 204,
+      "56+": 203
+    },
+    "location_breakdown": {
+      "Onsite": 590,
+      "Hybrid": 510,
+      "Remote": 397
+    }
+  },
+  {
+    "id": 1,
+    "name": "Overworked Young & Unsupported",
+    "color": "#FF6B9D",
+    "count": 1771,
+    "centroid_x": 7.2897,
+    "centroid_y": 2.1298,
+    "avg_stress": 3.051,
+    "avg_burnout": 2.743,
+    "avg_wellbeing": 2.411,
+    "avg_sleep_strain": 1.93,
+    "avg_demands": 3.07,
+    "avg_resources": 2.762,
+    "industry_breakdown": {
+      "Consulting": 341,
+      "Finance": 337,
+      "Healthcare": 319,
+      "IT": 274,
+      "Manufacturing": 210,
+      "Retail": 158,
+      "Education": 132
+    },
+    "age_breakdown": {
+      "26-35": 644,
+      "18-25": 433,
+      "36-45": 374,
+      "46-55": 217,
+      "56+": 103
+    },
+    "location_breakdown": {
+      "Onsite": 1018,
+      "Hybrid": 493,
+      "Remote": 260
+    }
+  },
+  {
+    "id": 2,
+    "name": "Stable Seniors, Hidden Exhaustion",
+    "color": "#00D4FF",
+    "count": 1732,
+    "centroid_x": 1.6599,
+    "centroid_y": 2.8667,
+    "avg_stress": 1.79,
+    "avg_burnout": 5.193,
+    "avg_wellbeing": 4.483,
+    "avg_sleep_strain": 2.97,
+    "avg_demands": 2.54,
+    "avg_resources": 3.018,
+    "industry_breakdown": {
+      "Education": 337,
+      "Manufacturing": 294,
+      "Retail": 284,
+      "Consulting": 225,
+      "IT": 223,
+      "Healthcare": 189,
+      "Finance": 180
+    },
+    "age_breakdown": {
+      "56+": 504,
+      "46-55": 432,
+      "36-45": 371,
+      "26-35": 322,
+      "18-25": 103
+    },
+    "location_breakdown": {
+      "Remote": 860,
+      "Hybrid": 545,
+      "Onsite": 327
+    }
+  }
+]

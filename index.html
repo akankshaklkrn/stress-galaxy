@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Stress Galaxy</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;800&display=swap" rel="stylesheet">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden !important;
+      background: #07080f;
+      color: #e8e8f0;
+      font-family: 'Space Mono', monospace;
+    }
+
+    #galaxy-container {
+      position: fixed !important;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      z-index: 1;
+      background: #07080f;
+      pointer-events: auto;
+    }
+
+    /* ── Top-right Enter button ───────────────────────────── */
+    #enter-btn {
+      position: fixed;
+      top: 20px;
+      right: 24px;
+      z-index: 9999;
+      padding: 10px 20px;
+      background: #FFD166;
+      border: none;
+      border-radius: 8px;
+      color: #07080f;
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      box-shadow: 0 4px 20px rgba(255, 209, 102, 0.4);
+      white-space: nowrap;
+      pointer-events: all;
+    }
+
+    #enter-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(255, 209, 102, 0.55);
+    }
+
+    #enter-btn span {
+      opacity: 0.6;
+      font-size: 11px;
+    }
+
+    /* ── Story host ───────────────────────────────────────── */
+    #story-host {
+      position: fixed !important;
+      top: 0; left: 0;
+      width: 100vw;
+      height: calc(100vh - 72px);
+      z-index: 2000 !important;
+      pointer-events: none;
+    }
+
+    .story-section {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      display: flex;
+      align-items: center;
+      pointer-events: none;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.55s ease;
+    }
+
+    .story-section.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    #section-1 { justify-content: center; }
+    #section-2 { justify-content: flex-start; padding-left: 8vw; }
+    #section-3 { justify-content: flex-end;   padding-right: 8vw; }
+    #section-4 { justify-content: flex-start; padding-left: 8vw; }
+    #section-5 { justify-content: center; }
+    #section-6 { justify-content: center; }
+
+    .story-panel {
+      pointer-events: all;
+      background: rgba(7, 8, 15, 0.82);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      border-radius: 12px;
+      padding: 28px 30px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      max-width: 380px;
+      opacity: 1 !important;
+      visibility: visible !important;
+      transform: translateY(18px);
+      transition: transform 0.6s ease 0.1s;
+      position: relative;
+      z-index: 201;
+    }
+
+    .story-section.active .story-panel {
+      transform: translateY(0);
+    }
+
+    #section-1 .story-panel {
+      background: transparent !important;
+      border: none !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      text-align: center;
+      max-width: 620px;
+    }
+
+    #section-1 .story-panel h1 {
+      background: none;
+      -webkit-text-fill-color: #FFD166;
+      color: #FFD166;
+      text-shadow: 0 10px 34px rgba(0,0,0,0.55), 0 0 16px rgba(255,209,102,0.18);
+    }
+
+    #section-5 .story-panel,
+    #section-6 .story-panel {
+      max-width: 480px;
+      text-align: center;
+    }
+
+    /* ── Typography ───────────────────────────────────────── */
+    .story-panel h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: 52px;
+      font-weight: 800;
+      letter-spacing: 0.03em;
+      line-height: 1.05;
+      color: #e8e8f0;
+      background: linear-gradient(125deg, #FFD166 0%, #FF6B9D 50%, #00D4FF 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 16px;
+    }
+
+    .story-panel h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: #e8e8f0;
+      margin-bottom: 20px;
+    }
+
+    .story-panel p {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.6);
+      line-height: 1.8;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      font-family: 'Space Mono', monospace;
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.5);
+      line-height: 1.7;
+      margin-bottom: 28px;
+      display: block;
+    }
+
+    .click-hint {
+      font-family: 'Space Mono', monospace;
+      font-size: 13px;
+      color: rgba(255, 209, 102, 0.98);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      text-shadow: 0 0 10px rgba(255, 209, 102, 0.28);
+      animation: pulseHint 2.5s ease-in-out infinite;
+      margin-top: 28px;
+      display: block;
+    }
+
+    @keyframes pulseHint {
+      0%, 100% { opacity: 0.28; }
+      50%       { opacity: 0.65; }
+    }
+
+    .cluster-card {
+      border-left: 3px solid;
+      padding: 10px 14px;
+      margin-bottom: 10px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 0 6px 6px 0;
+      opacity: 0;
+      transform: translateX(-10px);
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+
+    .story-section.active .cluster-card:nth-child(2) { opacity: 1; transform: translateX(0); transition-delay: 0.15s; }
+    .story-section.active .cluster-card:nth-child(3) { opacity: 1; transform: translateX(0); transition-delay: 0.30s; }
+    .story-section.active .cluster-card:nth-child(4) { opacity: 1; transform: translateX(0); transition-delay: 0.45s; }
+
+    .cluster-card-name {
+      font-family: 'Syne', sans-serif;
+      font-size: 12px; font-weight: 700;
+      color: #e8e8f0; margin-bottom: 4px;
+    }
+
+    .cluster-card-stats {
+      font-family: 'Space Mono', monospace;
+      font-size: 9px; color: rgba(255, 255, 255, 0.4);
+    }
+
+    .archetype-num {
+      font-family: 'Syne', sans-serif;
+      font-size: 96px; font-weight: 800;
+      line-height: 1; opacity: 0.11;
+      margin-bottom: -18px; display: block;
+    }
+
+    .cluster-badge {
+      font-family: 'Space Mono', monospace;
+      font-size: 8px; font-weight: 700;
+      letter-spacing: 0.12em; margin-bottom: 8px; display: block;
+    }
+
+    .archetype-name {
+      font-family: 'Syne', sans-serif;
+      font-size: 26px; font-weight: 700;
+      color: #e8e8f0; margin-bottom: 4px;
+    }
+
+    .archetype-meta {
+      font-family: 'Space Mono', monospace;
+      font-size: 9px; color: rgba(255, 255, 255, 0.4);
+      margin-bottom: 14px; letter-spacing: 0.04em;
+    }
+
+    .stat-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .stat-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 8px; color: rgba(255,255,255,0.38);
+      width: 58px; flex-shrink: 0;
+    }
+    .stat-track { flex: 1; height: 3px; background: rgba(255,255,255,0.07); border-radius: 2px; }
+    .stat-fill  { height: 100%; border-radius: 2px; }
+    .stat-val {
+      font-family: 'Space Mono', monospace;
+      font-size: 8px; color: rgba(255,255,255,0.45);
+      width: 28px; text-align: right; flex-shrink: 0;
+    }
+
+    .quote-block {
+      border-left: 3px solid;
+      padding: 10px 14px; margin: 14px 0;
+      font-family: 'Space Mono', monospace;
+      font-size: 10px; color: rgba(255,255,255,0.68);
+      line-height: 1.8; font-style: italic;
+      background: rgba(255,255,255,0.02);
+      border-radius: 0 6px 6px 0;
+    }
+
+    .pattern-row {
+      display: flex; align-items: center;
+      gap: 12px; margin-bottom: 14px;
+      font-family: 'Space Mono', monospace;
+      font-size: 10px; justify-content: center;
+    }
+    .pattern-from  { color: rgba(255,255,255,0.48); }
+    .pattern-arrow { color: rgba(255,255,255,0.22); }
+    .pattern-to    { font-weight: 700; }
+
+    .cta-row {
+      display: flex; gap: 14px;
+      justify-content: center;
+      margin-top: 20px; flex-wrap: wrap;
+    }
+
+    .cta-btn-outline {
+      padding: 12px 24px; background: transparent;
+      border: 1px solid rgba(255,255,255,0.22);
+      border-radius: 7px; color: rgba(255,255,255,0.72);
+      font-family: 'Space Mono', monospace;
+      font-size: 10px; letter-spacing: 0.08em;
+      cursor: pointer; text-decoration: none;
+      display: inline-block; transition: all 0.15s;
+    }
+    .cta-btn-outline:hover { border-color: rgba(255,255,255,0.5); color: white; transform: translateY(-2px); }
+
+    /* ── Section 6 big CTA ────────────────────────────────── */
+    .section6-cta-big {
+      display: block;
+      margin-top: 24px;
+      padding: 15px 24px;
+      background: linear-gradient(125deg, #FFD166, #FF6B9D);
+      border: none;
+      border-radius: 10px;
+      color: #07080f;
+      font-family: 'Syne', sans-serif;
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      text-decoration: none;
+      text-align: center;
+      transition: transform 0.15s, box-shadow 0.2s;
+      box-shadow: 0 6px 28px rgba(255,107,157,0.35);
+    }
+    .section6-cta-big:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 36px rgba(255,107,157,0.55);
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       BOTTOM NAV BAR
+    ═══════════════════════════════════════════════════════ */
+    #bottom-nav {
+      position: fixed;
+      bottom: 0; left: 0;
+      width: 100%; height: 72px;
+      z-index: 9999;
+      background: rgba(7, 8, 15, 0.9);
+      border-top: 1px solid rgba(255,255,255,0.07);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: auto;
+    }
+
+    #progress-bar-track {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 2px;
+      background: rgba(255,255,255,0.06);
+    }
+
+    #progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #FFD166, #FF6B9D, #00D4FF);
+      transition: width 0.5s ease;
+      border-radius: 0 2px 2px 0;
+    }
+
+    .nav-arrow {
+      width: 40px; height: 40px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.05);
+      color: rgba(255,255,255,0.6);
+      font-size: 16px;
+      transition: all 0.2s;
+      user-select: none;
+      flex-shrink: 0;
+    }
+
+    .nav-arrow:hover {
+      background: rgba(255,255,255,0.12);
+      color: white;
+      border-color: rgba(255,255,255,0.28);
+    }
+
+    .nav-arrow:active { transform: scale(0.92); }
+
+    .nav-arrow.disabled {
+      opacity: 0.18;
+      cursor: default;
+      pointer-events: none;
+    }
+
+    #nav-dots {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 0 18px;
+    }
+
+    .nav-pip {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(255,255,255,0.42);
+      background: rgba(255,255,255,0.06);
+      cursor: pointer;
+      transition: all 0.25s;
+      flex-shrink: 0;
+    }
+
+    .nav-pip:hover {
+      border-color: rgba(255,255,255,0.65);
+      background: rgba(255,255,255,0.2);
+    }
+
+    .nav-pip.active {
+      background: white;
+      border-color: white;
+      width: 7px; height: 7px;
+      box-shadow: 0 0 6px rgba(255,255,255,0.45);
+    }
+
+    #nav-label {
+      position: absolute;
+      right: 28px;
+      font-family: 'Space Mono', monospace;
+      font-size: 8px;
+      color: rgba(255,255,255,0.35);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      display: none;
+    }
+
+    #nav-counter {
+      position: absolute;
+      left: 28px;
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      color: rgba(255,255,255,0.22);
+      letter-spacing: 0.06em;
+    }
+
+    #cluster-annotation {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 9500;
+      pointer-events: none;
+      width: 100%;
+      max-width: 760px;
+      padding: 0 32px;
+      text-align: center;
+      opacity: 0;
+      transition: opacity 0.6s ease;
+    }
+
+    #cluster-annotation.visible {
+      opacity: 1;
+    }
+
+    #cluster-annotation-inner {
+      background: rgba(7, 8, 15, 0.62);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 26px 34px;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    #annotation-badge {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    #annotation-text {
+      font-family: 'Space Mono', monospace;
+      font-size: 13px;
+      color: rgba(255,255,255,0.82);
+      line-height: 2.0;
+    }
+
+    #galaxy-dimmer {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(7, 8, 15, 0.22);
+      z-index: 5;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.7s ease;
+    }
+
+    #galaxy-dimmer.visible {
+      opacity: 1;
+    }
+  </style>
+
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+</head>
+
+<body>
+
+  <!-- Galaxy -->
+  <div id="galaxy-container"></div>
+  <div id="galaxy-dimmer"></div>
+
+  <!-- Fixed top-right Enter button — always visible -->
+  <a href="explore.html" id="enter-btn">
+    ✦ ENTER THE GALAXY <span>→</span>
+  </a>
+
+  <!-- Story sections -->
+  <div id="story-host">
+
+    <section class="story-section active" id="section-1">
+      <div class="story-panel">
+        <h1>✦ THE STRESS GALAXY</h1>
+        <span class="subtitle">5,000 workers. 160 variables. Every star is a human being.</span>
+        <span class="click-hint">press → to begin the story</span>
+      </div>
+    </section>
+
+    <section class="story-section" id="section-2">
+      <div class="story-panel">
+        <h2>Three Constellations</h2>
+        <div class="cluster-card" style="border-color:#FFD166">
+          <div class="cluster-card-name">Burning Mid-Career Professionals</div>
+          <div class="cluster-card-stats">n=1,497 · stress 2.67 · burnout 4.11</div>
+        </div>
+        <div class="cluster-card" style="border-color:#FF6B9D">
+          <div class="cluster-card-name">Overworked Young &amp; Unsupported</div>
+          <div class="cluster-card-stats">n=1,771 · stress 3.05 · burnout 2.74</div>
+        </div>
+        <div class="cluster-card" style="border-color:#00D4FF">
+          <div class="cluster-card-name">Stable Seniors, Hidden Exhaustion</div>
+          <div class="cluster-card-stats">n=1,732 · stress 1.79 · burnout 5.19</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="story-section" id="section-3">
+      <div class="story-panel">
+        <span class="archetype-num" style="color:#FF6B9D">01</span>
+        <span class="cluster-badge" style="color:#FF6B9D">OVERWORKED YOUNG &amp; UNSUPPORTED</span>
+        <div class="archetype-name">Marcus Cole</div>
+        <div class="archetype-meta">Age 18-25 · Consulting · Onsite</div>
+        <div class="stat-row">
+          <span class="stat-label">Stress</span>
+          <div class="stat-track"><div class="stat-fill" style="width:80%;background:#FFD166"></div></div>
+          <span class="stat-val">3.2/4</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Burnout</span>
+          <div class="stat-track"><div class="stat-fill" style="width:37%;background:#FF6B9D"></div></div>
+          <span class="stat-val">2.6/7</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Wellbeing</span>
+          <div class="stat-track"><div class="stat-fill" style="width:38%;background:#00D4FF"></div></div>
+          <span class="stat-val">2.3/6</span>
+        </div>
+        <div class="quote-block" style="border-color:#FF6B9D">
+          "18 months into his first job. Running on ambition.
+          No mentor. No one told him this pace isn't normal."
+        </div>
+      </div>
+    </section>
+
+    <section class="story-section" id="section-4">
+      <div class="story-panel">
+        <span class="archetype-num" style="color:#00D4FF">02</span>
+        <span class="cluster-badge" style="color:#00D4FF">STABLE SENIORS, HIDDEN EXHAUSTION</span>
+        <div class="archetype-name">Linda Okafor</div>
+        <div class="archetype-meta">Age 46-55 · Education · Remote</div>
+        <div class="stat-row">
+          <span class="stat-label">Stress</span>
+          <div class="stat-track"><div class="stat-fill" style="width:43%;background:#FFD166"></div></div>
+          <span class="stat-val">1.7/4</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Burnout</span>
+          <div class="stat-track"><div class="stat-fill" style="width:77%;background:#FF6B9D"></div></div>
+          <span class="stat-val">5.4/7</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Wellbeing</span>
+          <div class="stat-track"><div class="stat-fill" style="width:77%;background:#00D4FF"></div></div>
+          <span class="stat-val">4.6/6</span>
+        </div>
+        <div class="quote-block" style="border-color:#00D4FF">
+          "26 years teaching. Learned to absorb stress.
+          Burnout: 5.4/7. Describes job as 'fine.'
+          Her body disagrees."
+        </div>
+        <p style="font-size:9px;color:rgba(0,212,255,0.6);margin-top:8px;font-family:'Space Mono',monospace;">
+          Burnout 5.4 — classified as HIGH on the Maslach scale
+        </p>
+      </div>
+    </section>
+
+    <section class="story-section" id="section-5">
+      <div class="story-panel">
+        <h2>This is not personal failure.</h2>
+        <p style="color:#FFD166;font-family:'Syne',sans-serif;font-size:18px;font-weight:700;margin-bottom:24px;">
+          It is a structural pattern.
+        </p>
+        <div class="pattern-row">
+          <span class="pattern-from">Youngest workers</span>
+          <span class="pattern-arrow">→</span>
+          <span class="pattern-to" style="color:#FF6B9D">Lowest resources</span>
+        </div>
+        <div class="pattern-row">
+          <span class="pattern-from">Highest stress</span>
+          <span class="pattern-arrow">→</span>
+          <span class="pattern-to" style="color:#FF6B9D">Least support</span>
+        </div>
+        <div class="pattern-row">
+          <span class="pattern-from">Most experience</span>
+          <span class="pattern-arrow">→</span>
+          <span class="pattern-to" style="color:#00D4FF">Highest burnout</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="story-section" id="section-6">
+      <div class="story-panel">
+        <h2>Where do you belong?</h2>
+        <span class="subtitle">5,000 workers. Three constellations. One is yours.</span>
+        <a href="explore.html" class="section6-cta-big">✦ ENTER THE GALAXY →</a>
+        <div class="cta-row">
+          <a href="explore.html#find" class="cta-btn-outline">Find My Star</a>
+        </div>
+      </div>
+    </section>
+
+    <div id="cluster-annotation" style="display:none;">
+      <div id="cluster-annotation-inner">
+        <div id="annotation-badge"></div>
+        <div id="annotation-text"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bottom nav -->
+  <div id="bottom-nav">
+    <div id="progress-bar-track">
+      <div id="progress-bar-fill" style="width:16.67%"></div>
+    </div>
+    <div id="nav-counter">01 / 06</div>
+    <button class="nav-arrow disabled" id="btn-prev">&#8592;</button>
+    <div id="nav-dots">
+      <div class="nav-pip active" data-section="0" title="The Galaxy"></div>
+      <div class="nav-pip" data-section="1" title="Constellations"></div>
+      <div class="nav-pip" data-section="2" title="Marcus Cole"></div>
+      <div class="nav-pip" data-section="3" title="Linda Okafor"></div>
+      <div class="nav-pip" data-section="4" title="The Pattern"></div>
+    </div>
+    <button class="nav-arrow" id="btn-next">&#8594;</button>
+    
+  </div>
+
+  <script type="module">
+    import { initGalaxy } from "./js/galaxy.js";
+
+    const annotationEl = document.getElementById('cluster-annotation');
+    const annotationBadge = document.getElementById('annotation-badge');
+    const annotationText  = document.getElementById('annotation-text');
+    const galaxyDimmer    = document.getElementById('galaxy-dimmer');
+
+    function showAnnotation(badge, text, color) {
+      annotationBadge.textContent = badge;
+      annotationBadge.style.color = color;
+      annotationText.textContent  = text;
+      annotationEl.style.display  = 'block';
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          annotationEl.classList.add('visible');
+          galaxyDimmer.classList.add('visible');
+        });
+      });
+    }
+
+    function hideAnnotation() {
+      annotationEl.classList.remove('visible');
+      galaxyDimmer.classList.remove('visible');
+      setTimeout(() => { annotationEl.style.display = 'none'; }, 600);
+    }
+
+    const slideTimers = [];
+    function schedule(fn, ms) {
+      const id = setTimeout(fn, ms);
+      slideTimers.push(id);
+      return id;
+    }
+    function clearSlideTimers() {
+      while (slideTimers.length) clearTimeout(slideTimers.pop());
+    }
+
+    const SECTIONS = [
+      { id: 'section-1', label: 'The Galaxy',
+        onEnter: (api) => {
+          hideAnnotation();
+          api.hideStarfield?.();
+          setWorkerLayerVisible(false);
+          api.morphLayout('similarity', 600);
+          api.zoomOut(600);
+          api.clearHighlights();
+        }
+      },
+      { id: 'section-2', label: 'Constellations',
+        onEnter: (api) => {
+          hideAnnotation();
+          api.hideStarfield();
+          api.zoomOut(700);
+          api.clearHighlights();
+        }
+      },
+      { id: 'section-3', label: 'Marcus Cole',
+        onEnter: (api) => {
+          hideAnnotation();
+          api.hideStarfield();
+          api.zoomToCluster(1, 900);
+          schedule(() => api.highlightCluster(1), 400);
+          schedule(() => showAnnotation(
+            '● OVERWORKED YOUNG & UNSUPPORTED',
+            'First jobs. First salaries. Nobody warned them that working like ' +
+            'this would cost them something. ' +
+            'They don\'t have burnout yet. Give it two years.',
+            '#FFD166'
+          ), 900);
+        }
+      },
+      { id: 'section-4', label: 'Linda Okafor',
+        onEnter: (api) => {
+          hideAnnotation();
+          api.hideStarfield();
+          api.morphLayout('similarity', 400);
+          schedule(() => {
+            api.zoomToCluster(2, 900);
+            schedule(() => api.highlightCluster(2), 400);
+          }, 350);
+          schedule(() => showAnnotation(
+            '● STABLE SENIORS, HIDDEN EXHAUSTION',
+            'They\'ve been doing this for decades. They know how to look fine. ' +
+            'Calendars full, emails answered, never miss a deadline. ' +
+            'Burnout at 5.19 out of 7. ' +
+            'They would not describe themselves as burned out.',
+            '#FF6B9D'
+          ), 1000);
+        }
+      },
+      { id: 'section-5', label: 'The Pattern',
+        onEnter: (api) => {
+          hideAnnotation();
+          api.hideStarfield();
+          api.zoomOut(600);
+          schedule(() => api.morphLayout('stress-spectrum', 1000), 800);
+        }
+      },
+      { id: 'section-6', label: 'Enter the Galaxy',
+        onEnter: (api) => {
+          hideAnnotation();
+          api.hideStarfield();
+          api.morphLayout('similarity', 600);
+          setTimeout(() => {
+            api.zoomToCluster(0, 900);
+            setTimeout(() => api.highlightCluster(0), 400);
+          }, 500);
+          setTimeout(() => showAnnotation(
+            '● BURNING MID-CAREER PROFESSIONALS',
+            'They\'ve been around long enough to see the pattern. ' +
+            'They just don\'t know what to do about it yet. ' +
+            'This is the group that keeps the lights on — ' +
+            'and pays the highest price for it.',
+            '#00D4FF'
+          ), 1100);
+        }
+      },
+    ];
+
+    const TOTAL = SECTIONS.length;
+    let current = 0;
+    let transitioning = false;
+
+    const btnPrev      = document.getElementById('btn-prev');
+    const btnNext      = document.getElementById('btn-next');
+    
+    const navCounter   = document.getElementById('nav-counter');
+    const progressFill = document.getElementById('progress-bar-fill');
+    const pips         = document.querySelectorAll('.nav-pip');
+
+    function setWorkerLayerVisible(visible) {
+      const opacity = visible ? '' : '0';
+      document.querySelectorAll('#galaxy-container .galaxy-g circle.star').forEach(el => {
+        el.style.opacity = opacity;
+      });
+      document.querySelectorAll('#galaxy-container .cluster-label').forEach(el => {
+        el.style.opacity = visible ? '' : '0';
+      });
+    }
+
+    let galaxyInitPromise = null;
+    async function ensureGalaxy() {
+      if (galaxyInitPromise) return galaxyInitPromise;
+      galaxyInitPromise = (async () => {
+        await initGalaxy();
+        if (window.galaxyAPI && window.galaxyAPI.showStarfield) {
+          window.galaxyAPI.showStarfield();
+        }
+        if (window.galaxyAPI) {
+          // Attempt 1: immediate
+          window.galaxyAPI.morphLayout('similarity', 0);
+          window.galaxyAPI.zoomOut(0);
+          // Attempt 2: after 200ms in case D3 hasn't rendered yet
+          setTimeout(() => {
+            if (window.galaxyAPI) {
+              window.galaxyAPI.morphLayout('similarity', 0);
+              window.galaxyAPI.zoomOut(0);
+            }
+          }, 200);
+          // Attempt 3: after 600ms as final fallback
+          setTimeout(() => {
+            if (window.galaxyAPI) {
+              window.galaxyAPI.morphLayout('similarity', 0);
+            }
+          }, 600);
+        }
+      })();
+      return galaxyInitPromise;
+    }
+
+    let pendingIndex = null;
+
+    async function goTo(index) {
+      if (index < 0 || index >= TOTAL || index === current) return;
+      if (transitioning) {
+        pendingIndex = index;
+        return;
+      }
+      clearSlideTimers();
+      transitioning = true;
+      document.getElementById(SECTIONS[current].id)?.classList.remove('active');
+      current = index;
+      document.getElementById(SECTIONS[current].id)?.classList.add('active');
+      updateNav();
+      if (current > 0) {
+        try { await ensureGalaxy(); } catch (e) { console.error(e); }
+      }
+      if (window.galaxyAPI) {
+        hideAnnotation();
+        window.galaxyAPI.clearHighlights();
+        window.galaxyAPI.zoomOut(0);
+        document.querySelectorAll('#galaxy-container circle').forEach(el => {
+          el.style.opacity = '';
+          el.removeAttribute('opacity');
+        });
+        if (current === 0) {
+          window.galaxyAPI.hideStarfield?.();
+          setWorkerLayerVisible(false);
+        }
+        setTimeout(() => {
+          if (window.galaxyAPI) SECTIONS[current].onEnter(window.galaxyAPI);
+        }, 80);
+      }
+      setTimeout(() => {
+        transitioning = false;
+        if (pendingIndex !== null && pendingIndex !== current) {
+          const next = pendingIndex;
+          pendingIndex = null;
+          goTo(next);
+        }
+      }, 650);
+    }
+
+    function updateNav() {
+      progressFill.style.width = (((current + 1) / TOTAL) * 100) + '%';
+      const p = n => String(n).padStart(2, '0');
+      navCounter.textContent = `${p(current + 1)} / ${p(TOTAL)}`;
+      
+      pips.forEach((pip, i) => pip.classList.toggle('active', i === current));
+      btnPrev.classList.toggle('disabled', current === 0);
+      btnNext.classList.toggle('disabled', current === TOTAL - 1);
+      btnNext.style.display = (current === TOTAL - 1) ? 'none' : 'flex';
+      btnPrev.style.display = (current === 0) ? 'none' : 'flex';
+      btnPrev.disabled = current === 0;
+      btnNext.disabled = current === TOTAL - 1;
+      btnPrev.setAttribute('aria-disabled', String(current === 0));
+      btnNext.setAttribute('aria-disabled', String(current === TOTAL - 1));
+    }
+
+    btnPrev.addEventListener('click', () => goTo(current - 1));
+    btnNext.addEventListener('click', () => goTo(current + 1));
+    pips.forEach((pip, i) => pip.addEventListener('click', () => goTo(i)));
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight') goTo(current + 1);
+      if (e.key === 'ArrowLeft')  goTo(current - 1);
+    });
+
+    async function boot() {
+      updateNav();
+    }
+
+    boot().catch(console.error);
+  </script>
+
+</body>
+</html>
