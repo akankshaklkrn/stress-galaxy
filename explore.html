@@ -33,6 +33,10 @@
       </div>
     </div>
 
+    <button id="toggle-fys" style="width:auto;padding:8px 12px;white-space:nowrap;">
+      ✦ FIND YOUR STAR
+    </button>
+
   </header>
 
   <div id="main-area">
@@ -54,57 +58,17 @@
         <div class="view-panel-title">AVG BURNOUT BY INDUSTRY</div>
         <div class="view-panel-chart" id="burnout-bars"></div>
       </div>
+      <div class="view-panel">
+        <div class="view-panel-title">PARALLEL COORDINATES — LASSO TO FILTER</div>
+        <div class="view-panel-chart" id="parallel-coords"></div>
+      </div>
     </div>
   </div>
 
-  <aside id="sidebar">
-    <div class="panel">
-      <div class="panel-title">CONSTELLATIONS</div>
-      <div class="legend-item">
-        <div class="legend-dot" style="background:var(--c0)"></div>
-        <div>
-          <div class="legend-name">Burning Mid-Career Professionals</div>
-          <div class="legend-stats">n=1,497 · stress 2.67 · burnout 4.11</div>
-        </div>
-      </div>
-      <div class="legend-item">
-        <div class="legend-dot" style="background:var(--c1)"></div>
-        <div>
-          <div class="legend-name">Overworked Young & Unsupported</div>
-          <div class="legend-stats">n=1,771 · stress 3.05 · burnout 2.74</div>
-        </div>
-      </div>
-      <div class="legend-item">
-        <div class="legend-dot" style="background:var(--c2)"></div>
-        <div>
-          <div class="legend-name">Stable Seniors, Hidden Exhaustion</div>
-          <div class="legend-stats">n=1,732 · stress 1.79 · burnout 5.19</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="panel">
-      <div class="panel-title">VISUAL ENCODING</div>
-      <div class="enc-row"><span class="enc-icon">◉</span> Node size → Stress level</div>
-      <div class="enc-row"><span class="enc-icon">●</span> Color → Cluster</div>
-      <div class="enc-row"><span class="enc-icon">◌</span> Opacity → Resources</div>
-      <div class="enc-row"><span class="enc-icon">⟳</span> Pulse speed → Burnout</div>
-    </div>
-
-    <div class="panel">
-      <div class="panel-title">PARALLEL COORDINATES — LASSO TO FILTER</div>
-      <div id="parallel-coords"></div>
-    </div>
-
-    <div class="panel" style="padding:10px 15px">
-      <button id="toggle-fys">✦ FIND YOUR STAR</button>
-    </div>
-
-    <div id="find-your-star-panel" style="display:none"></div>
-  </aside>
-
   <div id="stats-bar">Loading data...</div>
 </div>
+
+<div id="find-your-star-panel" style="display:none;position:fixed;top:56px;right:20px;z-index:120;max-width:320px;"></div>
 
 <div id="galaxy-tooltip"></div>
 <div id="tooltip" style="
@@ -125,6 +89,7 @@
     await initGalaxy();
 
     const workers = window.galaxyAPI.getWorkers();
+    window.__allWorkers = workers;
     initParallelCoords(workers);
 
     requestAnimationFrame(() => initLinkedViews(workers));
