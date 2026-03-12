@@ -318,7 +318,7 @@ html, body {
 }
 
 .panel-title {
-  font-size: 7.5px;
+  font-size: 11.5px;
   letter-spacing: 0.12em;
   color: var(--muted);
   margin-bottom: 9px;
@@ -344,14 +344,14 @@ html, body {
 }
 
 .legend-name {
-  font-size: 9px;
+  font-size: 12.5px;
   line-height: 1.4;
   color: var(--text);
   font-weight: 700;
 }
 
 .legend-stats {
-  font-size: 7.5px;
+  font-size: 10.5px;
   color: var(--muted);
   margin-top: 1px;
 }
@@ -361,15 +361,22 @@ html, body {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 5px;
-  font-size: 8.5px;
-  color: var(--muted);
+  margin-bottom: 7px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.58);
+  letter-spacing: 0.01em;
 }
 
-.enc-icon { font-size: 11px; width: 15px; text-align: center; flex-shrink: 0; }
+.enc-icon {
+  font-size: 16px;
+  width: 18px;
+  text-align: center;
+  flex-shrink: 0;
+  color: rgba(255,255,255,0.72);
+}
 
 /* Parallel coords */
-#parallel-coords { width: 100%; height: 195px; }
+#parallel-coords { width: 100%; height: 250px; }
 
 /* Find Your Star */
 #find-your-star-panel { padding: 13px 15px; }
@@ -557,7 +564,7 @@ html, body {
 .tick text {
   fill: rgba(255,255,255,0.35) !important;
   font-family: var(--font-mono) !important;
-  font-size: 7.5px !important;
+  font-size: 10px !important;
 }
 
 /* ── Responsive: hide sidebar on small screens ─────────────── */

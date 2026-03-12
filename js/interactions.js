@@ -100,13 +100,33 @@ function buildFindYourStarPanel() {
         background:rgba(255,255,255,0.05); border-radius:6px;
         font-size:9.5px; line-height:1.7; color:rgba(255,255,255,0.8);
       `;
+      const clusterCounts = { 0: 1497, 1: 1771, 2: 1732 };
+      const clusterStory  = {
+        0: 'Mid-career. Enough experience to see the pattern. Not enough leverage to change it.',
+        1: 'First jobs. Nobody warned them this pace would cost them something.',
+        2: 'Decades in. They know how to look fine. Their burnout score disagrees.'
+      };
       res.innerHTML = `
-        <strong style="color:${clusterColor(result.cluster)}">
+        <div style="color:${clusterColor(result.cluster)};font-size:8px;
+                    letter-spacing:0.12em;margin-bottom:6px;">
+          YOUR CONSTELLATION
+        </div>
+        <div style="font-family:'Syne',sans-serif;font-size:13px;
+                    font-weight:700;color:#e8e8f0;margin-bottom:6px;">
           ${result.cluster_name}
-        </strong><br>
-        Stress: ${result.stress.toFixed(2)} &nbsp;|&nbsp;
-        Burnout: ${result.burnout.toFixed(2)}<br>
-        <span style="opacity:0.55">${result.industry} · ${result.age}</span>
+        </div>
+        <div style="opacity:0.55;font-size:9px;margin-bottom:8px;">
+          ${result.industry} · ${result.age} · ${result.work_location ?? ''}
+        </div>
+        <div style="opacity:0.75;font-size:9.5px;line-height:1.7;
+                    border-left:2px solid ${clusterColor(result.cluster)};
+                    padding-left:10px;">
+          ${clusterStory[result.cluster]}
+        </div>
+        <div style="opacity:0.35;font-size:8px;margin-top:8px;">
+          You share this constellation with 
+          ${clusterCounts[result.cluster].toLocaleString()} workers.
+        </div>
       `;
       panel.querySelector("div").appendChild(res);
     }

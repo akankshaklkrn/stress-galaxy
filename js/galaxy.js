@@ -588,14 +588,22 @@ export function findYourStar(profile) {
 }
 
 export function showAnnotation(html, x, y, color = "white", duration = 4000) {
-  g.selectAll(".annotation-callout").remove();
+  svg.selectAll(".annotation-callout").remove();
 
-  const fo = g.append("foreignObject")
+  const t = d3.zoomTransform(svg.node());
+  const [sx, sy] = t.apply([x, y]);
+  const boxW = 220;
+  const boxH = 80;
+  const pad = 8;
+  const fx = Math.max(pad, Math.min(W() - boxW - pad, sx + 14));
+  const fy = Math.max(pad, Math.min(H() - boxH - pad, sy - 24));
+
+  const fo = svg.append("foreignObject")
     .attr("class", "annotation-callout")
-    .attr("x", x + 14)
-    .attr("y", y - 24)
-    .attr("width", 220)
-    .attr("height", 80)
+    .attr("x", fx)
+    .attr("y", fy)
+    .attr("width", boxW)
+    .attr("height", boxH)
     .attr("opacity", 0);
 
   fo.append("xhtml:div")
