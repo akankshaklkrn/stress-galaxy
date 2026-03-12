@@ -197,7 +197,7 @@ function initAgeRing(workers) {
     .attr("width", W).attr("height", H)
     .style("background", "transparent");
 
-  rg = rsvg.append("g").attr("transform", `translate(${W / 2},${H / 2})`);
+  rg = rsvg.append("g").attr("transform", `translate(${W / 2},${(H / 2) + 2})`);
 
   renderRing(workers);
   drawRingLabels(W, H);
@@ -209,9 +209,10 @@ function renderRing(subset) {
 
   const el = document.getElementById("age-ring");
   if (!el) return;
-  const W = el.clientWidth || 260;
+  const W = el.clientWidth  || 260;
+  const H = el.clientHeight || 240;
 
-  const maxR  = Math.min(W, 260) / 2 - 8;
+  const maxR  = Math.min(W, H, 260) / 2 - 18;
   const rings = [
     { age: "18-25", inner: maxR * 0.22, outer: maxR * 0.38 },
     { age: "26-35", inner: maxR * 0.40, outer: maxR * 0.55 },
@@ -277,7 +278,7 @@ function renderRing(subset) {
 }
 
 function drawRingLabels(W, H) {
-  const maxR  = Math.min(W, 260) / 2 - 8;
+  const maxR  = Math.min(W, H, 260) / 2 - 18;
   const rings = [
     { age: "18-25", r: maxR * 0.30 },
     { age: "26-35", r: maxR * 0.475 },

@@ -286,6 +286,10 @@ function bindZoom() {
     });
 
   svg.call(zoom);
+  svg.on("mousedown.zoom", null);
+  svg.on("touchstart.zoom", null);
+  svg.on("touchmove.zoom", null);
+  svg.on("touchend.zoom", null);
   svg.on("dblclick.zoom", null);
   svg.on("dblclick", () => zoomOut());
 }
@@ -432,7 +436,6 @@ function bindLasso() {
 
   svg.on("mousedown.lasso", function(event) {
     if (event.button !== 0) return;
-    if (event.target.classList.contains("star")) return;
     drawing = true;
     path = [d3.pointer(event, svg.node())];
 
@@ -463,7 +466,10 @@ function bindLasso() {
       selectedIds.clear();
       clearHighlights();
       updateStatsBar(workers);
-      if (lassoCallback) lassoCallback(workers);
+      if (lassoCallback) {
+        console.log('[LASSO]', workers.length, 'workers selected');
+        lassoCallback(workers);
+      }
       return;
     }
 
@@ -481,7 +487,11 @@ function bindLasso() {
       .attr("r",       d => selectedIds.has(d.id) ? nodeRadius(d) * 1.4 : nodeRadius(d) * 0.7);
 
     updateStatsBar(inside.length > 0 ? inside : workers);
-    if (lassoCallback) lassoCallback(inside.length > 0 ? inside : workers);
+    if (lassoCallback) {
+      const selected = inside.length > 0 ? inside : workers;
+      console.log('[LASSO]', selected.length, 'workers selected');
+      lassoCallback(selected);
+    }
   });
 }
 

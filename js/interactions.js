@@ -10,6 +10,7 @@ export function initInteractions() {
   buildFindYourStarPanel();
   bindStoryControls();
   bindLassoToLinkedViews();
+  bindClearSelection();
 }
 
 function buildFindYourStarPanel() {
@@ -153,14 +154,20 @@ function bindLassoToLinkedViews() {
   if (!window.galaxyAPI) return;
 
   window.galaxyAPI.setLassoCallback(subset => {
+    window.parallelCoordsAPI?.filterToWorkers(subset);
     if (subset.length === window.galaxyAPI.getWorkers().length) {
       resetFilter();
     } else {
       filterToWorkers(subset);
     }
 
-    if (window.linkedViewsAPI) {
-      window.linkedViewsAPI.filterToWorkers(subset);
-    }
+    window.linkedViewsAPI?.filterToWorkers(subset);
+  });
+}
+
+function bindClearSelection() {
+  document.getElementById("clear-selection-btn")?.addEventListener("click", () => {
+    window.parallelCoordsAPI?.filterToWorkers(null);
+    window.linkedViewsAPI?.filterToWorkers(null);
   });
 }
