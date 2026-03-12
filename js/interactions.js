@@ -174,6 +174,7 @@ function bindLassoToLinkedViews() {
   if (!window.galaxyAPI) return;
 
   window.galaxyAPI.setLassoCallback(subset => {
+    window.__lastLassoSubset = subset;
     window.parallelCoordsAPI?.filterToWorkers(subset);
     if (subset.length === window.galaxyAPI.getWorkers().length) {
       resetFilter();
@@ -186,8 +187,30 @@ function bindLassoToLinkedViews() {
 }
 
 function bindClearSelection() {
-  document.getElementById("clear-selection-btn")?.addEventListener("click", () => {
-    window.parallelCoordsAPI?.filterToWorkers(null);
-    window.linkedViewsAPI?.filterToWorkers(null);
-  });
+  const btn = document.getElementById("clear-selection-btn");
+  if (!btn) return;
+
+  btn.onclick = (e) => {
+    e?.preventDefault?.();
+    e?.stopPropagation?.();
+    window.__lastLassoSubset = null;
+    const all = window.__allWorkers || window.galaxyAPI?.getWorkers?.() || [];
+
+    // Reset linked views + parallel coords to show all workers (no filter)
+    try { resetFilter(); } catch (_) {}
+    if (all.length) {
+      window.linkedViewsAPI?.filterToWorkers(all);
+    }
+
+    // Reset galaxy to default state
+    document.querySelector(".your-star")?.remove();
+    document.querySelectorAll(".your-star-ring").forEach(e => e.remove());
+    window.galaxyAPI?.clearSelection?.();
+    window.galaxyAPI?.zoomOut?.();
+
+    // Return to the main "GALAXY" layout button state
+    document.querySelectorAll("[data-layout]").forEach(b => b.classList.remove("active"));
+    document.querySelector('[data-layout="similarity"]')?.classList.add("active");
+    window.galaxyAPI?.morphLayout?.("similarity");
+  };
 }

@@ -294,6 +294,120 @@ html, body {
   flex-shrink: 0;
 }
 
+.enlarge-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 4px 7px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.65);
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.12s;
+  z-index: 5;
+}
+
+.enlarge-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.22);
+  color: rgba(255, 255, 255, 0.9);
+  transform: translateY(-1px);
+}
+
+.enlarge-btn:active { transform: translateY(0); }
+
+.chart-modal-open #app {
+  filter: blur(8px) saturate(0.95);
+  transform: translateZ(0);
+  pointer-events: none;
+}
+
+.chart-modal-open #tooltip,
+.chart-modal-open #galaxy-tooltip {
+  z-index: 3001;
+}
+
+#chart-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: none;
+}
+
+#chart-modal.open { display: block; }
+
+#chart-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(10px);
+}
+
+#chart-modal-content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(1100px, 94vw);
+  height: min(720px, 86vh);
+  background: rgba(7, 8, 15, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 14px;
+  box-shadow: 0 18px 70px rgba(0, 0, 0, 0.65);
+  overflow: hidden;
+}
+
+#chart-modal-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.85);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.12s;
+  z-index: 3;
+}
+
+#chart-modal-close:hover {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.28);
+  transform: translateY(-1px);
+}
+
+#chart-modal-close:active { transform: translateY(0); }
+
+#chart-modal-host {
+  position: absolute;
+  inset: 0;
+  padding: 16px 16px 14px;
+}
+
+.view-panel.is-modal {
+  width: 100%;
+  height: 100%;
+  border-right: none;
+  padding: 16px 16px 14px;
+  background: transparent;
+}
+
+.view-panel.is-modal .enlarge-btn { display: none; }
+
+.view-panel.is-modal .view-panel-title {
+  font-size: 9.5px;
+  margin-bottom: 10px;
+}
+
 .view-panel-chart {
   flex: 1;
   min-height: 0;

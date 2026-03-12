@@ -14,7 +14,7 @@ let xScale;
 let allWorkers = [];
 let currentSubset = [];
 
-const MARGIN = { top: 66, right: 10, bottom: 40, left: 10 };
+const MARGIN = { top: 40, right: 10, bottom: 40, left: 10 };
 
 export function initParallelCoords(workers) {
   allWorkers    = workers;
@@ -82,32 +82,6 @@ export function initParallelCoords(workers) {
         .attr("stroke", "rgba(255,255,255,0.2)")
         .attr("stroke-width", 0.5);
     });
-
-    axisG.append("text")
-      .attr("y", -16)
-      .attr("text-anchor", "middle")
-      .attr("fill", "rgba(255,255,255,0.92)")
-      .attr("font-size", "15px")
-      .attr("font-family", "'Space Mono', monospace")
-      .attr("font-weight", "600")
-      .attr("letter-spacing", "0.03em")
-      .style("paint-order", "stroke")
-      .style("stroke", "rgba(7,8,15,0.95)")
-      .style("stroke-width", "3px")
-      .style("stroke-linejoin", "round")
-      .text(axis.label.toUpperCase());
-
-    axisG.append("text")
-      .attr("y", -5)
-      .attr("text-anchor", "middle")
-      .attr("fill", "rgba(255,255,255,0.6)")
-      .attr("font-size", "11px")
-      .attr("font-family", "'Space Mono', monospace")
-      .style("paint-order", "stroke")
-      .style("stroke", "rgba(7,8,15,0.95)")
-      .style("stroke-width", "2.5px")
-      .style("stroke-linejoin", "round")
-      .text(axis.note);
   });
 
   window.parallelCoordsAPI = {

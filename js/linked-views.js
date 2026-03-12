@@ -15,9 +15,71 @@ const INDUSTRIES = ["Consulting","Education","Finance","Healthcare","IT","Manufa
 
 let allWorkers = [];
 
+// ── Tooltip pinning (click-to-keep) ───────────────────────────
+function getTooltipEl() {
+  return document.getElementById("tooltip");
+}
+
+function positionTooltip(tip, x, y) {
+  // Default offset (same vibe as hover)
+  tip.style.left = `${x + 12}px`;
+  tip.style.top  = `${y - 8}px`;
+
+  // Clamp into viewport so it doesn't get cut off
+  requestAnimationFrame(() => {
+    const r = tip.getBoundingClientRect();
+    let left = r.left;
+    let top  = r.top;
+    if (r.right > window.innerWidth - 8) left = Math.max(8, window.innerWidth - r.width - 8);
+    if (r.bottom > window.innerHeight - 8) top = Math.max(8, window.innerHeight - r.height - 8);
+    if (r.left < 8) left = 8;
+    if (r.top < 8) top = 8;
+    tip.style.left = `${left}px`;
+    tip.style.top  = `${top}px`;
+  });
+}
+
+function pinTooltip(html, x, y) {
+  const tip = getTooltipEl();
+  if (!tip) return;
+  window.__tooltipPinned = true;
+  tip.style.opacity = "1";
+  tip.innerHTML = html;
+  positionTooltip(tip, x, y);
+}
+
+function unpinTooltip() {
+  const tip = getTooltipEl();
+  window.__tooltipPinned = false;
+  if (tip) tip.style.opacity = "0";
+}
+
+function ensurePinnedTooltipHandlers() {
+  if (window.__pinnedTooltipHandlersInstalled) return;
+  window.__pinnedTooltipHandlersInstalled = true;
+
+  // Click anywhere else to dismiss pinned tooltip
+  document.addEventListener("click", (e) => {
+    if (!window.__tooltipPinned) return;
+    const target = e.target;
+    const isBar = target?.closest?.("#burnout-bars svg") && (target.tagName === "rect" || target.closest?.("rect"));
+    if (!isBar) unpinTooltip();
+  }, true);
+
+  // Esc dismisses pinned tooltip first (before modal closes)
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    if (!window.__tooltipPinned) return;
+    e.preventDefault();
+    e.stopPropagation();
+    unpinTooltip();
+  }, true);
+}
+
 // ── Boot ─────────────────────────────────────────────────────
 export function initLinkedViews(workers) {
   allWorkers = workers;
+  ensurePinnedTooltipHandlers();
 
   initBubbleChart(workers);
   initAgeRing(workers);
@@ -142,6 +204,7 @@ function renderBubbles(subset, opacity) {
 
   bg.selectAll(".bubble")
     .on("mouseover", function(event, d) {
+      if (window.__tooltipPinned) return;
       d3.select(this).raise()
         .transition().duration(100)
         .attr("r", brScale(d.burnout) * 1.8)
@@ -164,6 +227,7 @@ function renderBubbles(subset, opacity) {
       }
     })
     .on("mouseout", function(event, d) {
+      if (window.__tooltipPinned) return;
       d3.select(this).transition().duration(150)
         .attr("r", brScale(d.burnout))
         .attr("opacity", opacity * 0.55)
@@ -253,6 +317,7 @@ function renderRing(subset) {
     // Hover on arcs
     rg.selectAll(`.ring-arc-${ring.age.replace("+", "p")}`)
       .on("mouseover", function(event, d) {
+        if (window.__tooltipPinned) return;
         d3.select(this).transition().duration(100).attr("opacity", 1);
         const pct = ((d.data.value / total) * 100).toFixed(1);
         if (tip) {
@@ -271,6 +336,7 @@ function renderRing(subset) {
         }
       })
       .on("mouseout", function() {
+        if (window.__tooltipPinned) return;
         d3.select(this).transition().duration(150).attr("opacity", 0.75);
         if (tip) tip.style.opacity = "0";
       });
@@ -366,7 +432,6 @@ function initBurnoutBars(workers) {
   ig.append("text").attr("x", iW * 0.55).attr("y", iyScale("Education") - 6)
     .attr("fill", "rgba(0,212,255,0.6)").attr("font-size", "7.5px")
     .attr("font-family", "'Space Mono',monospace").attr("font-style", "italic")
-    .text("← highest burnout cluster in Education");
 
   renderBars(workers);
 }
@@ -405,7 +470,8 @@ function renderBars(subset) {
         .attr("width", 0)
         .attr("rx", 2)
         .attr("fill", COLORS[cluster])
-        .attr("opacity", 0.72);
+        .attr("opacity", 0.72)
+        .style("cursor", "pointer");
 
       bar.transition().duration(600).delay(cluster * 80)
         .attr("width", ixScale(avg));
@@ -424,25 +490,32 @@ function renderBars(subset) {
         .transition().duration(600).delay(cluster * 80 + 300)
         .attr("opacity", 1);
 
+      const tooltipHtml = `
+        <div style="color:${COLORS[cluster]};font-weight:700;margin-bottom:5px;font-size:10px">
+          ${NAMES[cluster]}
+        </div>
+        <div style="font-size:9px;opacity:0.85;line-height:1.6">
+          Industry: <strong>${ind}</strong><br>
+          Avg Burnout: <strong>${avg.toFixed(3)}</strong> /7<br>
+          Workers: <strong>${vals.length.toLocaleString()}</strong>
+        </div>`;
+
       bar.on("mouseover", function(event) {
+        if (window.__tooltipPinned) return;
         d3.select(this).transition().duration(100).attr("opacity", 1);
         if (tip) {
           tip.style.opacity = "1";
           tip.style.left = `${event.clientX + 12}px`;
           tip.style.top  = `${event.clientY - 8}px`;
-          tip.innerHTML = `
-            <div style="color:${COLORS[cluster]};font-weight:700;margin-bottom:5px;font-size:10px">
-              ${NAMES[cluster]}
-            </div>
-            <div style="font-size:9px;opacity:0.85;line-height:1.6">
-              Industry: <strong>${ind}</strong><br>
-              Avg Burnout: <strong>${avg.toFixed(3)}</strong> /7<br>
-              Workers: <strong>${vals.length.toLocaleString()}</strong>
-            </div>`;
+          tip.innerHTML = tooltipHtml;
         }
       }).on("mouseout", function() {
+        if (window.__tooltipPinned) return;
         d3.select(this).transition().duration(150).attr("opacity", 0.72);
         if (tip) tip.style.opacity = "0";
+      }).on("click", function(event) {
+        event.stopPropagation();
+        pinTooltip(tooltipHtml, event.clientX, event.clientY);
       });
     });
   });

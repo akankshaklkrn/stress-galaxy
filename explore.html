@@ -48,18 +48,22 @@
     <div id="views-row">
       <div class="view-panel">
         <div class="view-panel-title">STRESS × WELLBEING — BUBBLE SIZE = BURNOUT</div>
+        <button class="enlarge-btn" data-chart="bubble-chart" aria-label="Enlarge chart" title="Enlarge">enlarge</button>
         <div class="view-panel-chart" id="bubble-chart"></div>
       </div>
       <div class="view-panel">
         <div class="view-panel-title">AGE DISTRIBUTION BY CLUSTER</div>
+        <button class="enlarge-btn" data-chart="age-ring" aria-label="Enlarge chart" title="Enlarge">enlarge</button>
         <div class="view-panel-chart" id="age-ring"></div>
       </div>
       <div class="view-panel">
         <div class="view-panel-title">AVG BURNOUT BY INDUSTRY</div>
+        <button class="enlarge-btn" data-chart="burnout-bars" aria-label="Enlarge chart" title="Enlarge">enlarge</button>
         <div class="view-panel-chart" id="burnout-bars"></div>
       </div>
       <div class="view-panel">
-        <div class="view-panel-title">PARALLEL COORDINATES — LASSO TO FILTER</div>
+        <div class="view-panel-title">MULTI-METRIC PROFILE — EACH LINE = 1 WORKER</div>
+        <button class="enlarge-btn" data-chart="parallel-coords" aria-label="Enlarge chart" title="Enlarge">enlarge</button>
         <div class="view-panel-chart" id="parallel-coords"></div>
       </div>
     </div>
@@ -69,6 +73,14 @@
 </div>
 
 <div id="find-your-star-panel" style="display:none;position:fixed;top:56px;right:20px;z-index:120;max-width:320px;"></div>
+
+<div id="chart-modal" aria-hidden="true">
+  <div id="chart-modal-backdrop"></div>
+  <div id="chart-modal-content" role="dialog" aria-modal="true" aria-label="Enlarged chart">
+    <button id="chart-modal-close" aria-label="Close enlarged chart" title="Close">✕</button>
+    <div id="chart-modal-host"></div>
+  </div>
+</div>
 
 <div id="galaxy-tooltip"></div>
 <div id="tooltip" style="
@@ -108,6 +120,88 @@
       panel.style.display = "block";
       toggleBtn.textContent = "✕ CLOSE";
     }
+
+    const modal = document.getElementById("chart-modal");
+    const modalBackdrop = document.getElementById("chart-modal-backdrop");
+    const modalHost = document.getElementById("chart-modal-host");
+    const modalClose = document.getElementById("chart-modal-close");
+
+    let activePanel = null;
+    let panelPlaceholder = null;
+
+    function rerenderForResize(panel) {
+      const chartEl = panel?.querySelector?.(".view-panel-chart");
+      if (!chartEl) return;
+
+      const id = chartEl.id;
+      const all = window.__allWorkers || window.galaxyAPI?.getWorkers?.() || [];
+      const subset = window.__lastLassoSubset || all;
+
+      requestAnimationFrame(() => {
+        if (id === "parallel-coords") {
+          initParallelCoords(all);
+          if (subset && all && subset.length !== all.length) {
+            window.parallelCoordsAPI?.filterToWorkers(subset);
+          }
+        } else {
+          initLinkedViews(all);
+          window.linkedViewsAPI?.filterToWorkers(subset && all && subset.length !== all.length ? subset : all);
+        }
+      });
+    }
+
+    function openModalFor(panel) {
+      if (!panel || activePanel) return;
+      activePanel = panel;
+
+      panelPlaceholder = document.createElement("div");
+      panelPlaceholder.className = panel.className;
+      panelPlaceholder.style.visibility = "hidden";
+      panelPlaceholder.style.minHeight = `${panel.getBoundingClientRect().height}px`;
+      panel.parentNode.insertBefore(panelPlaceholder, panel);
+
+      modalHost.appendChild(panel);
+      panel.classList.add("is-modal");
+
+      modal.classList.add("open");
+      modal.setAttribute("aria-hidden", "false");
+      document.body.classList.add("chart-modal-open");
+
+      modalClose?.focus?.();
+      rerenderForResize(panel);
+    }
+
+    function closeModal() {
+      if (!activePanel) return;
+      const panel = activePanel;
+      activePanel = null;
+
+      modal.classList.remove("open");
+      modal.setAttribute("aria-hidden", "true");
+      document.body.classList.remove("chart-modal-open");
+      window.__tooltipPinned = false;
+      const tip = document.getElementById("tooltip");
+      if (tip) tip.style.opacity = "0";
+
+      panel.classList.remove("is-modal");
+      if (panelPlaceholder && panelPlaceholder.parentNode) {
+        panelPlaceholder.parentNode.insertBefore(panel, panelPlaceholder);
+        panelPlaceholder.remove();
+      }
+      panelPlaceholder = null;
+      rerenderForResize(panel);
+    }
+
+    document.querySelectorAll(".enlarge-btn").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        openModalFor(btn.closest(".view-panel"));
+      });
+    });
+
+    modalBackdrop?.addEventListener("click", closeModal);
+    modalClose?.addEventListener("click", closeModal);
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); });
   })();
 </script>
 

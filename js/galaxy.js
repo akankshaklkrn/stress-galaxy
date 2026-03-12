@@ -14,6 +14,8 @@ let similarity = {};
 
 let svg, g, zoom;
 let starfieldG;
+let labelLayer;
+let clusterLabelNodes = new Map();
 let xScale, yScale;
 let currentLayout = "similarity";
 let lassoActive   = false;
@@ -38,12 +40,14 @@ export async function initGalaxy() {
   bindZoom();
   bindLasso();
   bindLayoutButtons();
+  bindClearButton();
 
   window.galaxyAPI = {
     morphLayout,
     highlightWorker,
     highlightCluster,
     clearHighlights,
+    clearSelection,
     zoomToCluster,
     zoomOut,
     getWorkers: () => workers,
@@ -80,6 +84,9 @@ function buildSVG() {
   });
 
   g = svg.append("g").attr("class", "galaxy-g");
+  labelLayer = svg.append("g")
+    .attr("class", "cluster-label-layer")
+    .style("pointer-events", "none");
 }
 
 function drawStars() {
@@ -127,38 +134,75 @@ function nodeShape(d) {
 }
 
 function drawClusterLabels() {
-  g.selectAll(".cluster-label").remove();
+  clusterLabelNodes = new Map();
+  labelLayer?.selectAll?.(".cluster-label")?.remove?.();
 
   clusters.forEach(c => {
-    const cx = xScale(c.centroid_x);
-    const cy = yScale(c.centroid_y) - 28;
-
-    const labelG = g.append("g")
+    const labelG = labelLayer.append("g")
       .attr("class", "cluster-label")
-      .attr("transform", `translate(${cx},${cy})`)
-      .attr("opacity", 0);
+      .attr("data-cluster", c.id)
+      .attr("opacity", 1);
 
-    labelG.append("text")
+    // connector (updated on zoom/layout)
+    labelG.append("line")
+      .attr("class", "cluster-label-connector")
+      .attr("stroke", "rgba(255,255,255,0.22)")
+      .attr("stroke-width", 1)
+      .attr("stroke-dasharray", "4,4");
+
+    const bg = labelG.append("rect")
+      .attr("class", "cluster-label-bg")
+      .attr("rx", 10)
+      .attr("fill", "rgba(7,8,15,0.92)")
+      .attr("stroke", "rgba(255,255,255,0.14)")
+      .attr("stroke-width", 1)
+      .attr("filter", "drop-shadow(0 10px 28px rgba(0,0,0,0.55))");
+
+    const contentG = labelG.append("g").attr("class", "cluster-label-content");
+
+    contentG.append("text")
+      .attr("class", "cluster-label-name")
+      .attr("x", 0)
+      .attr("y", 0)
       .attr("text-anchor", "middle")
-      .attr("dy", 0)
       .attr("fill", CLUSTER_COLORS[c.id])
       .attr("font-size", "11px")
       .attr("font-family", "'Space Mono', monospace")
       .attr("letter-spacing", "0.08em")
-      .attr("font-weight", "600")
+      .attr("font-weight", "700")
       .text(c.name.toUpperCase());
 
-    labelG.append("text")
+    contentG.append("text")
+      .attr("class", "cluster-label-count")
+      .attr("x", 0)
+      .attr("y", 16)
       .attr("text-anchor", "middle")
-      .attr("dy", 16)
-      .attr("fill", "rgba(255,255,255,0.45)")
+      .attr("fill", "rgba(255,255,255,0.55)")
       .attr("font-size", "9px")
       .attr("font-family", "'Space Mono', monospace")
       .text(`n = ${c.count.toLocaleString()}`);
 
-    labelG.transition().delay(1800).duration(800)
-      .attr("opacity", 1);
+    sizeClusterLabel(labelG);
+
+    clusterLabelNodes.set(c.id, labelG);
   });
+
+  positionClusterLabels();
+}
+
+function sizeClusterLabel(labelG) {
+  const contentG = labelG.select(".cluster-label-content");
+  const bg = labelG.select(".cluster-label-bg");
+  if (contentG.empty() || bg.empty()) return;
+
+  const padX = 14;
+  const padY = 10;
+  const bbox = contentG.node().getBBox();
+  const rx = bbox.x - padX;
+  const ry = bbox.y - padY;
+  const rw = bbox.width + padX * 2;
+  const rh = bbox.height + padY * 2;
+  bg.attr("x", rx).attr("y", ry).attr("width", rw).attr("height", rh);
 }
 
 function buildStatsBar() {
@@ -283,6 +327,7 @@ function bindZoom() {
       g.attr("transform", e.transform);
       const k = e.transform.k;
       g.style("opacity", k > 2 ? 0.72 : 1);
+      if (currentLayout === "similarity") positionClusterLabels();
     });
 
   svg.call(zoom);
@@ -388,10 +433,126 @@ function computePositions(layout) {
 
 function updateClusterLabelPositions(positions, layout) {
   if (layout !== "similarity") {
-    g.selectAll(".cluster-label").transition().duration(400).attr("opacity", 0);
+    labelLayer?.selectAll?.(".cluster-label").transition().duration(400).attr("opacity", 0);
     return;
   }
-  g.selectAll(".cluster-label").transition().duration(400).attr("opacity", 1);
+  labelLayer?.selectAll?.(".cluster-label").transition().duration(400).attr("opacity", 1);
+  positionClusterLabels();
+}
+
+function positionClusterLabels() {
+  if (!labelLayer || !svg) return;
+  if (!clusters?.length) return;
+  if (currentLayout !== "similarity") return;
+
+  const t = d3.zoomTransform(svg.node());
+
+  clusters.forEach(c => {
+    const labelG = clusterLabelNodes.get(c.id);
+    if (!labelG) return;
+
+    // Ensure bg sizing is correct (e.g. after font load)
+    sizeClusterLabel(labelG);
+
+    const centroid = t.apply([xScale(c.centroid_x), yScale(c.centroid_y)]);
+    const cx = centroid[0];
+    const cy = centroid[1];
+
+    // Compute on-screen bounds of the cluster dots
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (let i = 0; i < workers.length; i++) {
+      const w = workers[i];
+      if (w.cluster !== c.id) continue;
+      const p = t.apply([xScale(w.x), yScale(w.y)]);
+      minX = Math.min(minX, p[0]);
+      maxX = Math.max(maxX, p[0]);
+      minY = Math.min(minY, p[1]);
+      maxY = Math.max(maxY, p[1]);
+    }
+    if (!isFinite(minX)) return;
+
+    const bg = labelG.select(".cluster-label-bg");
+    const rectX = +bg.attr("x") || 0;
+    const rectY = +bg.attr("y") || 0;
+    const rectW = +bg.attr("width") || 0;
+    const rectH = +bg.attr("height") || 0;
+
+    const margin = 18;
+    const gap = 18;
+
+    const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+    // Candidate positions: above (preferred), below, side (fallback)
+    const candidates = [];
+
+    // Above
+    candidates.push({
+      x: (minX + maxX) / 2,
+      y: minY - gap - (rectY + rectH / 2),
+      score: 3
+    });
+    // Below
+    candidates.push({
+      x: (minX + maxX) / 2,
+      y: maxY + gap - (rectY - rectH / 2),
+      score: 2
+    });
+    // Side: left for left-ish clusters, right for right-ish clusters
+    const centerX = (minX + maxX) / 2;
+    const preferLeft = centerX > W() * 0.55;
+    candidates.push({
+      x: (preferLeft ? (minX - gap) : (maxX + gap)),
+      y: (minY + maxY) / 2,
+      side: preferLeft ? "left" : "right",
+      score: 1
+    });
+
+    // Choose best candidate that stays inside viewport and does not overlap the cluster bounds.
+    let chosen = null;
+    for (const cand of candidates) {
+      // Clamp so the full box stays in the viewport
+      const x = clamp(cand.x, margin - rectX, W() - margin - (rectX + rectW));
+      const y = clamp(cand.y, margin - rectY, H() - margin - (rectY + rectH));
+
+      const left = x + rectX;
+      const right = x + rectX + rectW;
+      const top = y + rectY;
+      const bottom = y + rectY + rectH;
+
+      const overlapsCluster =
+        !(right < (minX - 8) || left > (maxX + 8) || bottom < (minY - 8) || top > (maxY + 8));
+
+      if (overlapsCluster) continue;
+
+      chosen = { x, y };
+      break;
+    }
+
+    // If all candidates overlap, force it to the top margin band.
+    if (!chosen) {
+      const x = clamp((minX + maxX) / 2, margin - rectX, W() - margin - (rectX + rectW));
+      const y = clamp(margin - rectY, margin - rectY, H() - margin - (rectY + rectH));
+      chosen = { x, y };
+    }
+
+    labelG.attr("transform", `translate(${chosen.x},${chosen.y})`);
+
+    // Connector: from centroid to closest point on box border
+    const left = chosen.x + rectX;
+    const right = chosen.x + rectX + rectW;
+    const top = chosen.y + rectY;
+    const bottom = chosen.y + rectY + rectH;
+
+    const nearestX = clamp(cx, left, right);
+    const nearestY = clamp(cy, top, bottom);
+
+    labelG.select(".cluster-label-connector")
+      .attr("x1", cx - chosen.x)
+      .attr("y1", cy - chosen.y)
+      .attr("x2", nearestX - chosen.x)
+      .attr("y2", nearestY - chosen.y)
+      .attr("opacity", 0.9);
+  });
 }
 
 export function highlightWorker(workerId, color = "white") {
@@ -424,6 +585,13 @@ export function clearHighlights(duration = 400) {
       : nodeOpacity(d))
     .attr("r",       d => nodeRadius(d))
     .attr("stroke",  "none");
+}
+
+export function clearSelection(duration = 400) {
+  selectedIds.clear();
+  clearHighlights(duration);
+  updateStatsBar(workers);
+  if (lassoCallback) lassoCallback(workers);
 }
 
 let lassoCallback = null;
@@ -515,6 +683,29 @@ function bindLayoutButtons() {
       morphLayout(btn.dataset.layout);
     });
   });
+}
+
+function bindClearButton() {
+  const btn = document.getElementById("clear-selection-btn");
+  if (!btn) return;
+  btn.onclick = (e) => {
+    e?.preventDefault?.();
+    e?.stopPropagation?.();
+
+    window.__lastLassoSubset = null;
+
+    // Remove any "find your star" markers
+    g.select(".your-star")?.remove?.();
+    g.selectAll(".your-star-ring")?.remove?.();
+
+    clearSelection();
+    zoomOut();
+
+    // Return to the main "GALAXY" layout button state
+    document.querySelectorAll("[data-layout]").forEach(b => b.classList.remove("active"));
+    document.querySelector('[data-layout="similarity"]')?.classList.add("active");
+    morphLayout("similarity");
+  };
 }
 
 export function findYourStar(profile) {
