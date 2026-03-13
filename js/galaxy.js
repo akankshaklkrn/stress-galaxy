@@ -482,6 +482,45 @@ function positionClusterLabels() {
 
     const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
+    // ── Explicit placements requested ─────────────────────────
+    // Cluster id 0 (yellow): place mid-bottom
+    // Cluster id 2 (blue): place top-right above blue dots
+    if (c.id === 0 || c.id === 2) {
+      let x;
+      let y;
+
+      if (c.id === 0) {
+        // Desired: centered horizontally, below the yellow cluster
+        const desiredTop = maxY + gap;
+        x = clamp(W() / 2, margin - rectX, W() - margin - (rectX + rectW));
+        y = clamp(desiredTop - rectY, margin - rectY, H() - margin - (rectY + rectH));
+      } else {
+        // Desired: top-left corner (above blue cluster)
+        const desiredBottom = minY - gap;
+        x = margin - rectX;
+        y = clamp((desiredBottom - rectH) - rectY, margin - rectY, H() - margin - (rectY + rectH));
+      }
+
+      labelG.attr("transform", `translate(${x},${y})`);
+
+      const left = x + rectX;
+      const right = x + rectX + rectW;
+      const top = y + rectY;
+      const bottom = y + rectY + rectH;
+
+      const nearestX = clamp(cx, left, right);
+      const nearestY = clamp(cy, top, bottom);
+
+      labelG.select(".cluster-label-connector")
+        .attr("x1", cx - x)
+        .attr("y1", cy - y)
+        .attr("x2", nearestX - x)
+        .attr("y2", nearestY - y)
+        .attr("opacity", 0.9);
+
+      return;
+    }
+
     // Candidate positions: above (preferred), below, side (fallback)
     const candidates = [];
 

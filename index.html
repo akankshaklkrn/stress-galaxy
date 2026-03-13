@@ -193,6 +193,38 @@
       display: block;
     }
 
+    .project-context {
+      margin: 18px auto 0;
+      max-width: 560px;
+      background: rgba(7, 8, 15, 0.72);
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      border-radius: 14px;
+      padding: 18px 20px;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow:
+        0 16px 60px rgba(0,0,0,0.55),
+        0 0 0 1px rgba(255,255,255,0.04) inset;
+    }
+
+    .project-context-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      margin-bottom: 8px;
+      color: rgba(255,255,255,0.92);
+    }
+
+    .project-context p {
+      margin: 0;
+      font-size: 11px;
+      line-height: 1.85;
+      color: rgba(255,255,255,0.66);
+    }
+
+    .project-context strong { color: rgba(255,255,255,0.92); }
+
     @keyframes pulseHint {
       0%, 100% { opacity: 0.28; }
       50%       { opacity: 0.65; }
@@ -523,6 +555,15 @@
     <section class="story-section" id="section-2">
       <div class="story-panel">
         <h2>Three Constellations</h2>
+        <div class="project-context" role="note" aria-label="Project context">
+          <div class="project-context-title">What you’re looking at</div>
+          <p>
+            This project turns a workplace mental health survey into a navigable “galaxy”.
+            <strong>Each dot is one worker</strong>, positioned by similarity.
+            Use the arrows/dots to follow the story, then <strong>enter the galaxy</strong>
+            to explore, lasso-select groups, and compare patterns across the charts.
+          </p>
+        </div>
         <div class="cluster-card" style="border-color:#FFD166">
           <div class="cluster-card-name">Burning Mid-Career Professionals</div>
           <div class="cluster-card-stats">n=1,497 · stress 2.67 · burnout 4.11</div>
@@ -654,7 +695,7 @@
       <div class="nav-pip" data-section="1" title="Constellations"></div>
       <div class="nav-pip" data-section="2" title="Marcus Cole"></div>
       <div class="nav-pip" data-section="3" title="Linda Okafor"></div>
-      <div class="nav-pip" data-section="4" title="Enter the Galaxy"></div>
+      <div class="nav-pip" data-section="4" title="The Pattern"></div>
     </div>
     <button class="nav-arrow" id="btn-next">&#8594;</button>
     
@@ -750,14 +791,14 @@
           ), 1000);
         }
       },
-      { id: 'section-5', label: 'The Pattern',
-        onEnter: (api) => {
-          hideAnnotation();
-          api.hideStarfield();
-          api.zoomOut(600);
-        }
-      },
-      { id: 'section-6', label: 'Enter the Galaxy',
+      // { id: 'section-5', label: 'The Pattern',
+      //   onEnter: (api) => {
+      //     hideAnnotation();
+      //     api.hideStarfield();
+      //     api.zoomOut(600);
+      //   }
+      // },
+      { id: 'section-5', label: 'Enter the Galaxy',
         onEnter: (api) => {
           hideAnnotation();
           api.hideStarfield();
@@ -778,8 +819,13 @@
 
     // Maps dot index → SECTIONS index
     // Dot 4 jumps straight to section-6 (index 5), skipping section-5
-    const DOT_TO_SECTION = [0, 1, 2, 3, 5];
-    const SECTION_TO_DOT = [0, 1, 2, 3, -1, 4]; // -1 = section-5 has no dot
+    // Map dot index → SECTIONS index
+    // Last dot now goes to section-5 (index 4).
+    const DOT_TO_SECTION = [0, 1, 2, 3, 4];
+
+    // Map SECTIONS index → dot index (use -1 for "no dot")
+    // section-6 (index 5) has no dot highlight.
+    const SECTION_TO_DOT = [0, 1, 2, 3, 4, -1];
 
     const TOTAL = SECTIONS.length;
     let current = 0;

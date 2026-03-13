@@ -43,6 +43,14 @@
     <div id="galaxy-container">
       <div id="interaction-lock"></div>
       <div id="lasso-hint">⬡ Click + drag to lasso &nbsp;·&nbsp; Double-click to zoom out</div>
+
+      <div id="visual-encoding" aria-label="Visual encoding legend">
+        <div class="visual-encoding-title">VISUAL ENCODING</div>
+        <div class="enc-row"><span class="enc-icon">◯</span><span>Node size → Stress level</span></div>
+        <div class="enc-row"><span class="enc-icon">●</span><span>Color → Cluster</span></div>
+        <div class="enc-row"><span class="enc-icon">◌</span><span>Opacity → Resources</span></div>
+        <div class="enc-row"><span class="enc-icon">⟳</span><span>Pulse speed → Burnout</span></div>
+      </div>
     </div>
 
     <div id="views-row">
@@ -72,7 +80,7 @@
   <div id="stats-bar">Loading data...</div>
 </div>
 
-<div id="find-your-star-panel" style="display:none;position:fixed;top:56px;right:20px;z-index:120;max-width:320px;"></div>
+<div id="find-your-star-panel" style="display:none;position:fixed;top:44px;right:6px;z-index:220;max-width:320px;"></div>
 
 <div id="chart-modal" aria-hidden="true">
   <div id="chart-modal-backdrop"></div>
@@ -113,12 +121,18 @@
       const open  = panel.style.display !== "none";
       panel.style.display = open ? "none" : "block";
       toggleBtn.textContent = open ? "✦ FIND YOUR STAR" : "✕ CLOSE";
+
+      const ve = document.getElementById("visual-encoding");
+      if (ve) ve.style.display = open ? "block" : "none";
     });
 
     if (location.hash === "#find") {
       const panel = document.getElementById("find-your-star-panel");
       panel.style.display = "block";
       toggleBtn.textContent = "✕ CLOSE";
+
+      const ve = document.getElementById("visual-encoding");
+      if (ve) ve.style.display = "none";
     }
 
     const modal = document.getElementById("chart-modal");
