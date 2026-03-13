@@ -1,4 +1,9 @@
 const CLUSTER_COLORS = { 0: "#FFD166", 1: "#FF6B9D", 2: "#00D4FF" };
+const CLUSTER_NAMES = {
+  0: "Burning Mid-Career",
+  1: "Overworked Young",
+  2: "Stable Seniors"
+};
 
 const AXES = [
   { key: "stress",      label: "Stress",    domain: [1, 4], note: "DASS scale (1-4)" },
@@ -97,6 +102,31 @@ function linePath(d) {
   );
 }
 
+function getTooltipEl() {
+  return window.__getActiveTooltip?.()
+    || document.getElementById("tooltip-modal")
+    || document.getElementById("tooltip");
+}
+
+function positionTooltip(tip, x, y) {
+  const pad = 8;
+  const offX = 12;
+  const offY = -8;
+  const w = tip.offsetWidth || 220;
+  const h = tip.offsetHeight || 120;
+
+  let left = x + offX;
+  let top = y + offY;
+
+  if (left + w > window.innerWidth - pad) left = window.innerWidth - w - pad;
+  if (top + h > window.innerHeight - pad) top = window.innerHeight - h - pad;
+  if (left < pad) left = pad;
+  if (top < pad) top = pad;
+
+  tip.style.left = `${left}px`;
+  tip.style.top = `${top}px`;
+}
+
 function drawLines(subset, className, baseOpacity) {
   pcG.selectAll(`.${className}`).remove();
 
@@ -113,7 +143,48 @@ function drawLines(subset, className, baseOpacity) {
     .attr("fill", "none")
     .attr("stroke", d => CLUSTER_COLORS[d.cluster])
     .attr("stroke-width", 0.8)
-    .attr("opacity", baseOpacity);
+    .attr("opacity", baseOpacity)
+    .on("mouseover", function(event, d) {
+      if (window.__tooltipPinned) return;
+      const tip = getTooltipEl();
+      d3.select(this)
+        .raise()
+        .transition().duration(100)
+        .attr("stroke-width", 2)
+        .attr("opacity", 0.95);
+
+      if (!tip) return;
+      tip.style.opacity = "1";
+      tip.innerHTML = `
+        <div style="color:${CLUSTER_COLORS[d.cluster]};font-weight:700;margin-bottom:6px;font-size:10px">
+          ${CLUSTER_NAMES[d.cluster]}
+        </div>
+        <div style="font-size:9px;line-height:1.7;opacity:0.85">
+          ${d.industry} · ${d.age} · ${d.work_location}<br>
+          Stress: <strong>${d.stress.toFixed(2)}</strong> /4<br>
+          Burnout: <strong>${d.burnout.toFixed(2)}</strong> /7<br>
+          Wellbeing: <strong>${d.wellbeing.toFixed(2)}</strong> /6<br>
+          Demands: <strong>${d.demands.toFixed(2)}</strong> /5<br>
+          Resources: <strong>${d.resources.toFixed(2)}</strong> /5
+        </div>`;
+      positionTooltip(tip, event.clientX, event.clientY);
+    })
+    .on("mousemove", function(event) {
+      if (window.__tooltipPinned) return;
+      const tip = getTooltipEl();
+      if (tip && tip.style.opacity === "1") {
+        positionTooltip(tip, event.clientX, event.clientY);
+      }
+    })
+    .on("mouseout", function() {
+      if (window.__tooltipPinned) return;
+      const tip = getTooltipEl();
+      d3.select(this)
+        .transition().duration(120)
+        .attr("stroke-width", 0.8)
+        .attr("opacity", baseOpacity);
+      if (tip) tip.style.opacity = "0";
+    });
 }
 
 export function filterToWorkers(subset) {
