@@ -44,7 +44,7 @@ source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-`requirements.txt` includes: `pandas`, `numpy`, `scikit-learn`, `umap-learn`, `scipy`, `matplotlib`, `seaborn`
+`requirements.txt` includes: `pandas`, `numpy`, `scikit-learn`, `umap-learn`, `matplotlib`, `seaborn`, `jupyter`
 
 ### 2. Build processed data
 
@@ -86,7 +86,7 @@ To see the full project in ~5 minutes:
 
 4. **Draw a lasso** — click and drag a freehand shape anywhere on the galaxy. Watch all 4 linked charts update to the selected subset. Click **CLEAR** to reset.
 
-5. **Click any star** — a worker card appears with their industry, age, location, mental health access, and metric bars.
+5. **Hover any star** — a worker card appears with their industry, age, location, mental health access, and metric bars.
 
 6. **Open Find Your Star** (top-right) — enter your age group, industry, work location, and stress level. Click **PLACE MY STAR** to locate yourself in the galaxy.
 
@@ -107,7 +107,7 @@ To see the full project in ~5 minutes:
 ## Key Features
 
 ### Galaxy View (`explore.html`)
-- **5,000 stars** — color = cluster, size = stress level, opacity = available resources, pulse speed = burnout severity
+- **5,000 stars** — color = cluster, size = stress level, opacity = available resources (burnout is reflected in linked charts and worker metrics)
 - **4 layout morphs** via top toolbar:
   - `GALAXY` — UMAP similarity layout (default)
   - `STRESS AXIS` — X axis = stress score, Y = cluster band
@@ -124,11 +124,11 @@ To see the full project in ~5 minutes:
 - **Bubble chart** — X = wellbeing, Y = stress, size = burnout severity; ~600 workers sampled
 - **Age distribution ring** — 5 concentric donuts, one per age group, colored by cluster
 - **Burnout by industry bars** — 7 industries × 3 clusters; click to pin tooltip
-- **Parallel coordinates** — 5 axes (stress, burnout, wellbeing, demands, resources); 800 workers sampled; hover highlights linked star in galaxy
+- **Parallel coordinates** — 5 axes (stress, burnout, wellbeing, demands, resources); 800 workers sampled; hover emphasizes the worker profile line and shows tooltip details
 - **ENLARGE button** on each chart — opens full-screen modal, all interactivity preserved
 
 ### Tooltips
-- **Galaxy stars** — click for full worker card: industry, age, location, MH access, 4-metric mini bars
+- **Galaxy stars** — hover for full worker card: industry, age, location, MH access, 4-metric mini bars
 - **Burnout bars** — click to pin; dismiss with Esc or outside click
 - **Modal tooltips** — correctly routed when a chart is enlarged
 
@@ -178,10 +178,10 @@ stress-galaxy/
 `python/process.py` runs in 6 steps:
 
 1. **Load & map** — read CSV, apply Likert scale dictionaries to convert text responses to numeric
-2. **Impute** — mode for categoricals, median for 155 numeric scale columns (~5% missingness)
+2. **Impute** — mode for categoricals, median for numeric columns
 3. **Composite indices** — compute 6 scores: stress, burnout, wellbeing, sleep strain, job demands, available resources
 4. **Normalize + reduce** — StandardScaler z-score, then UMAP to 2D (n_neighbors=15, min_dist=0.1)
-5. **Cluster** — KMeans k=3 selected by silhouette score (0.1647) from k=3–8 search
+5. **Cluster** — KMeans with `k` selected by silhouette score from a `k=3..8` search (current dataset resolves to 3 clusters)
 6. **Similarity + export** — cosine similarity top-5 neighbors per worker; export 3 JSON files
 
 ---
@@ -193,7 +193,7 @@ stress-galaxy/
 | Visualization | D3.js 7.8.5 (CDN) |
 | Frontend | Vanilla JS ES modules, HTML5, CSS3 |
 | Fonts | Google Fonts: Space Mono, Syne |
-| ML / Data | Python 3, pandas, numpy, scikit-learn, umap-learn, scipy |
+| ML / Data | Python 3, pandas, numpy, scikit-learn, umap-learn |
 | Server | `python3 -m http.server` (no backend required) |
 
 No build tools, no npm, no framework. Everything runs from a static file server.
