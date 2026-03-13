@@ -72,6 +72,7 @@
       height: calc(100vh - 72px);
       z-index: 2000 !important;
       pointer-events: none;
+      display: block !important;
     }
 
     .story-section {
@@ -87,12 +88,12 @@
     }
 
     .story-section.active {
-      opacity: 1;
-      visibility: visible;
+      opacity: 1 !important;
+      visibility: visible !important;
     }
 
     #section-1 { justify-content: center; }
-    #section-2 { justify-content: flex-start; padding-left: 8vw; }
+    #section-2 { justify-content: center; padding-left: 0; }
     #section-3 { justify-content: flex-end;   padding-right: 8vw; }
     #section-4 { justify-content: flex-start; padding-left: 8vw; }
     #section-5 { justify-content: center; }
@@ -194,10 +195,10 @@
     }
 
     .project-context {
-      margin: 18px auto 0;
+      margin: 18px auto 14px;
       max-width: 560px;
-      background: rgba(7, 8, 15, 0.72);
-      border: 1px solid rgba(255, 255, 255, 0.10);
+      background: rgba(7, 8, 15, 0.78);
+      border: 1px solid rgba(255, 255, 255, 0.16);
       border-radius: 14px;
       padding: 18px 20px;
       backdrop-filter: blur(12px);
@@ -225,6 +226,71 @@
 
     .project-context strong { color: rgba(255,255,255,0.92); }
 
+    .project-context-box {
+      margin: 14px auto 16px;
+      width: min(560px, 92vw);
+      background: rgba(7, 8, 15, 0.92);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 12px;
+      padding: 18px 20px;
+      text-align: center;
+      box-shadow: 0 16px 60px rgba(0,0,0,0.55);
+    }
+
+    .project-context-box-title {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      color: rgba(255,255,255,0.62);
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    /* Section 2: centered context overlay (above galaxy dots) */
+    #section-2 .project-context-overlay {
+      position: fixed;
+      left: 50%;
+      top: 46%;
+      transform: translate(-50%, -50%);
+      width: min(680px, 92vw);
+      background: rgba(7, 8, 15, 0.90);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 14px;
+      padding: 22px 24px;
+      text-align: center;
+      box-shadow: 0 18px 70px rgba(0,0,0,0.6);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      z-index: 3000;
+      pointer-events: none;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.35s ease;
+    }
+
+    #section-2.active .project-context-overlay {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    #section-2 .project-context-overlay-title {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.20em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.7);
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    #section-2 .project-context-overlay-body {
+      margin: 0;
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      line-height: 1.9;
+      color: rgba(255,255,255,0.66);
+    }
+
     @keyframes pulseHint {
       0%, 100% { opacity: 0.28; }
       50%       { opacity: 0.65; }
@@ -241,9 +307,8 @@
       transition: opacity 0.4s ease, transform 0.4s ease;
     }
 
-    .story-section.active .cluster-card:nth-child(2) { opacity: 1; transform: translateX(0); transition-delay: 0.15s; }
-    .story-section.active .cluster-card:nth-child(3) { opacity: 1; transform: translateX(0); transition-delay: 0.30s; }
-    .story-section.active .cluster-card:nth-child(4) { opacity: 1; transform: translateX(0); transition-delay: 0.45s; }
+    /* Reveal constellation cards when section is active */
+    .story-section.active .cluster-card { opacity: 1; transform: translateX(0); }
 
     .cluster-card-name {
       font-family: 'Syne', sans-serif;
@@ -555,15 +620,6 @@
     <section class="story-section" id="section-2">
       <div class="story-panel">
         <h2>Three Constellations</h2>
-        <div class="project-context" role="note" aria-label="Project context">
-          <div class="project-context-title">What you’re looking at</div>
-          <p>
-            This project turns a workplace mental health survey into a navigable “galaxy”.
-            <strong>Each dot is one worker</strong>, positioned by similarity.
-            Use the arrows/dots to follow the story, then <strong>enter the galaxy</strong>
-            to explore, lasso-select groups, and compare patterns across the charts.
-          </p>
-        </div>
         <div class="cluster-card" style="border-color:#FFD166">
           <div class="cluster-card-name">Burning Mid-Career Professionals</div>
           <div class="cluster-card-stats">n=1,497 · stress 2.67 · burnout 4.11</div>
@@ -576,6 +632,14 @@
           <div class="cluster-card-name">Stable Seniors, Hidden Exhaustion</div>
           <div class="cluster-card-stats">n=1,732 · stress 1.79 · burnout 5.19</div>
         </div>
+      </div>
+
+      <div class="project-context-overlay" role="note" aria-label="Project context">
+        <div class="project-context-overlay-title">PROJECT CONTEXT</div>
+        <p class="project-context-overlay-body">
+          A map of modern workplace stress — turned into a sky of data.<br>
+          Each dot is one worker; closer dots share similar experiences.
+        </p>
       </div>
     </section>
 
