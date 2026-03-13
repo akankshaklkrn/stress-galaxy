@@ -190,14 +190,44 @@ function bindClearSelection() {
   const btn = document.getElementById("clear-selection-btn");
   if (!btn) return;
 
+  function closeEnlargedChartIfOpen() {
+    const modal = document.getElementById("chart-modal");
+    if (!modal?.classList?.contains("open")) return;
+    document.getElementById("chart-modal-close")?.click?.();
+  }
+
+  function resetExploreOverlays() {
+    // Ensure any chart tooltip state is fully reset
+    window.__tooltipPinned = false;
+    document.getElementById("tooltip")?.style?.setProperty("opacity", "0");
+    document.getElementById("tooltip-modal")?.style?.setProperty("opacity", "0");
+    document.getElementById("galaxy-tooltip")?.style?.setProperty("opacity", "0");
+
+    // Return Find Your Star UI to default collapsed state
+    const fysPanel = document.getElementById("find-your-star-panel");
+    const fysToggle = document.getElementById("toggle-fys");
+    const ve = document.getElementById("visual-encoding");
+    if (fysPanel) fysPanel.style.display = "none";
+    if (fysToggle) fysToggle.textContent = "✦ FIND YOUR STAR";
+    if (ve) ve.style.display = "block";
+  }
+
+  function setGalaxyButtonState() {
+    document.querySelectorAll("[data-layout]").forEach(b => b.classList.remove("active"));
+    document.querySelector('[data-layout="similarity"]')?.classList.add("active");
+  }
+
   btn.onclick = (e) => {
     e?.preventDefault?.();
     e?.stopPropagation?.();
-    window.__lastLassoSubset = null;
+    closeEnlargedChartIfOpen();
+    resetExploreOverlays();
+
     const all = window.__allWorkers || window.galaxyAPI?.getWorkers?.() || [];
 
     // Reset linked views + parallel coords to show all workers (no filter)
     try { resetFilter(); } catch (_) {}
+    window.parallelCoordsAPI?.clearHighlight?.();
     if (all.length) {
       window.linkedViewsAPI?.filterToWorkers(all);
     }
@@ -205,12 +235,18 @@ function bindClearSelection() {
     // Reset galaxy to default state
     document.querySelector(".your-star")?.remove();
     document.querySelectorAll(".your-star-ring").forEach(e => e.remove());
-    window.galaxyAPI?.clearSelection?.();
-    window.galaxyAPI?.zoomOut?.();
+    window.galaxyAPI?.hardResetMainGalaxy?.();
 
-    // Return to the main "GALAXY" layout button state
-    document.querySelectorAll("[data-layout]").forEach(b => b.classList.remove("active"));
-    document.querySelector('[data-layout="similarity"]')?.classList.add("active");
-    window.galaxyAPI?.morphLayout?.("similarity");
+    // Return to the main "GALAXY" layout and button state
+    setGalaxyButtonState();
+    window.galaxyAPI?.morphLayout?.("similarity", 0);
+    window.__lastLassoSubset = null;
+
+    // Small safety pass to guarantee default camera/layout state.
+    setTimeout(() => {
+      window.galaxyAPI?.hardResetMainGalaxy?.();
+      window.galaxyAPI?.morphLayout?.("similarity", 0);
+      setGalaxyButtonState();
+    }, 120);
   };
 }

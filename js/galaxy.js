@@ -48,6 +48,7 @@ export async function initGalaxy() {
     highlightCluster,
     clearHighlights,
     clearSelection,
+    hardResetMainGalaxy,
     zoomToCluster,
     zoomOut,
     getWorkers: () => workers,
@@ -630,6 +631,33 @@ export function clearSelection(duration = 400) {
   selectedIds.clear();
   clearHighlights(duration);
   updateStatsBar(workers);
+  if (lassoCallback) lassoCallback(workers);
+}
+
+export function hardResetMainGalaxy() {
+  if (!svg || !g || !zoom) return;
+
+  currentLayout = "similarity";
+  selectedIds.clear();
+
+  // Stop any in-flight animations that may keep the view in a filtered/layout state.
+  svg.interrupt();
+  g.selectAll(".star").interrupt();
+
+  const positions = computePositions("similarity");
+  g.selectAll(".star")
+    .attr("cx", d => positions[d.id].x)
+    .attr("cy", d => positions[d.id].y)
+    .attr("opacity", d => nodeOpacity(d))
+    .attr("r", d => nodeRadius(d))
+    .attr("stroke", "none")
+    .attr("stroke-width", 0);
+
+  svg.call(zoom.transform, d3.zoomIdentity);
+  clearAnnotations();
+  updateStatsBar(workers);
+  updateClusterLabelPositions(positions, "similarity");
+
   if (lassoCallback) lassoCallback(workers);
 }
 
