@@ -19,7 +19,6 @@ The project has two user-facing experiences:
 - `pandas`, `numpy`
 - `scikit-learn` (imputation, scaling, KMeans, silhouette, cosine similarity)
 - `umap-learn` (2D embedding)
-- `matplotlib`, `seaborn`, `jupyter` (analysis/notebook workflow)
 
 ---
 
@@ -58,6 +57,19 @@ python3 -m http.server 8000
 Open:
 - `http://localhost:8000/index.html`
 - `http://localhost:8000/explore.html`
+
+---
+
+## Data Storage
+
+This project does not require a database server. Data is file-based:
+- Raw input CSV: `data/raw/stress_data.csv`
+- Generated outputs: `data/processed/workers.json`, `data/processed/clusters.json`, `data/processed/similarity.json`
+
+Requirements:
+- Keep these files in the paths above (the frontend fetches them directly).
+- Serve the project via HTTP (not `file://`) so browser `fetch()` can load JSON files.
+- If deploying, include the `data/processed` artifacts with the static site.
 
 ---
 
