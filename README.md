@@ -2,9 +2,7 @@
 **ECS272 Information Visualization · UC Davis · Winter 2026**  
 Akanksha Kulkarni · Hemang Singh · Ishika Bhaumik
 
----
 [//]: # (Screenshots section)
----
 
 ## Screenshots
 
