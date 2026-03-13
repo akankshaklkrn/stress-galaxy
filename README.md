@@ -1,9 +1,22 @@
 # ✦ The Stress Galaxy
-
 **ECS272 Information Visualization · UC Davis · Winter 2026**  
 Akanksha Kulkarni · Hemang Singh · Ishika Bhaumik
 
 ---
+[//]: # (Screenshots section)
+---
+
+## Screenshots
+
+Below are some key screenshots from the project interface:
+
+| Overview | Age Orbit | Find Your Star |
+|---|---|---|
+| ![Overview](screenshots/Overview.jpeg) | ![Age Orbit](screenshots/AgeOrbit.jpeg) | ![Findme](screenshots/Findme.jpeg) |
+
+| Hover | Lasso | Ring Chart |
+|---|---|---|
+| ![Hover](screenshots/Hover.jpeg) | ![Lasso](screenshots/Lasso.jpeg) | ![Ring Chart](screenshots/RingChart.jpeg) |
 
 An interactive narrative visualization of global workplace mental health across **5,000 workers**.
 
