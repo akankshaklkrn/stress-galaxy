@@ -4,7 +4,7 @@ Akanksha Kulkarni · Hemang Singh · Ishika Bhaumik
 
 [//]: # (Screenshots section)
 
-## Screenshots
+## Project Overview
 
 Below are some key screenshots from the project interface:
 
