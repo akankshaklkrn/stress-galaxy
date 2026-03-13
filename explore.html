@@ -98,10 +98,17 @@
   font-family:'Space Mono',monospace;font-size:10px;color:#e8e8f0;
   transition:opacity 0.12s;z-index:1001;box-shadow:0 8px 40px rgba(0,0,0,0.65);
 "></div>
+<div id="tooltip-modal" style="
+  position:fixed;pointer-events:none;opacity:0;
+  background:rgba(7,8,15,0.96);border:1px solid rgba(255,255,255,0.1);
+  border-radius:10px;padding:13px 15px;max-width:220px;
+  font-family:'Space Mono',monospace;font-size:10px;color:#e8e8f0;
+  transition:opacity 0.12s;z-index:5005;box-shadow:0 8px 40px rgba(0,0,0,0.65);
+"></div>
 
 <script type="module">
   import { initGalaxy }         from "./js/galaxy.js";
-  import { initParallelCoords } from "./js/views.js";
+  import { initParallelCoords, resetFilter } from "./js/views.js";
   import { initLinkedViews }    from "./js/linked-views.js";
   import { initInteractions }   from "./js/interactions.js";
 
@@ -139,27 +146,54 @@
     const modalBackdrop = document.getElementById("chart-modal-backdrop");
     const modalHost = document.getElementById("chart-modal-host");
     const modalClose = document.getElementById("chart-modal-close");
+    const sharedTooltip = document.getElementById("tooltip");
+    const modalTooltip = document.getElementById("tooltip-modal");
+    const modalTooltipOriginalParent = modalTooltip?.parentNode || null;
+    window.__getActiveTooltip = () =>
+      document.body.classList.contains("chart-modal-open")
+        ? (modalTooltip || sharedTooltip)
+        : sharedTooltip;
 
     let activePanel = null;
     let panelPlaceholder = null;
 
     function rerenderForResize(panel) {
-      const chartEl = panel?.querySelector?.(".view-panel-chart");
-      if (!chartEl) return;
+      if (!panel) return;
+      const chartEl = panel.querySelector(".view-panel-chart");
+      const chartId = chartEl?.id;
+      if (!chartId) return;
 
-      const id = chartEl.id;
       const all = window.__allWorkers || window.galaxyAPI?.getWorkers?.() || [];
-      const subset = window.__lastLassoSubset || all;
+      const subset = window.__lastLassoSubset;
+      const hasSubset = Array.isArray(subset) && subset.length > 0 && subset.length !== all.length;
 
+      // Wait one frame so the moved panel has its final modal/non-modal size.
       requestAnimationFrame(() => {
-        if (id === "parallel-coords") {
+        if (chartId === "bubble-chart") {
+          window.linkedViewsAPI?.initBubbleChart?.(all);
+          if (hasSubset) window.linkedViewsAPI?.updateBubbleChart?.(subset);
+          return;
+        }
+
+        if (chartId === "age-ring") {
+          window.linkedViewsAPI?.initAgeRing?.(all);
+          if (hasSubset) window.linkedViewsAPI?.updateAgeRing?.(subset);
+          return;
+        }
+
+        if (chartId === "burnout-bars") {
+          window.linkedViewsAPI?.initBurnoutBars?.(all);
+          if (hasSubset) window.linkedViewsAPI?.updateBurnoutBars?.(subset);
+          return;
+        }
+
+        if (chartId === "parallel-coords") {
           initParallelCoords(all);
-          if (subset && all && subset.length !== all.length) {
-            window.parallelCoordsAPI?.filterToWorkers(subset);
+          if (hasSubset) {
+            window.parallelCoordsAPI?.filterToWorkers?.(subset);
+          } else {
+            resetFilter();
           }
-        } else {
-          initLinkedViews(all);
-          window.linkedViewsAPI?.filterToWorkers(subset && all && subset.length !== all.length ? subset : all);
         }
       });
     }
@@ -167,6 +201,14 @@
     function openModalFor(panel) {
       if (!panel || activePanel) return;
       activePanel = panel;
+
+      // Ensure hover tooltips work inside the enlarged view
+      window.__tooltipPinned = false;
+      if (sharedTooltip) sharedTooltip.style.opacity = "0";
+      if (modalTooltip) {
+        modalTooltip.style.opacity = "0";
+        modal.appendChild(modalTooltip); // Keep tooltip in top overlay layer
+      }
 
       panelPlaceholder = document.createElement("div");
       panelPlaceholder.className = panel.className;
@@ -194,8 +236,8 @@
       modal.setAttribute("aria-hidden", "true");
       document.body.classList.remove("chart-modal-open");
       window.__tooltipPinned = false;
-      const tip = document.getElementById("tooltip");
-      if (tip) tip.style.opacity = "0";
+      if (sharedTooltip) sharedTooltip.style.opacity = "0";
+      if (modalTooltip) modalTooltip.style.opacity = "0";
 
       panel.classList.remove("is-modal");
       if (panelPlaceholder && panelPlaceholder.parentNode) {
@@ -203,6 +245,9 @@
         panelPlaceholder.remove();
       }
       panelPlaceholder = null;
+      if (modalTooltip && modalTooltipOriginalParent) {
+        modalTooltipOriginalParent.appendChild(modalTooltip);
+      }
       rerenderForResize(panel);
     }
 

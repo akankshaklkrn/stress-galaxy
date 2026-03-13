@@ -329,7 +329,7 @@ html, body {
 
 .chart-modal-open #tooltip,
 .chart-modal-open #galaxy-tooltip {
-  z-index: 3001;
+  z-index: 3001 !important;
 }
 
 #chart-modal {
@@ -337,6 +337,19 @@ html, body {
   inset: 0;
   z-index: 2000;
   display: none;
+  isolation: isolate;
+}
+
+/* Keep shared chart tooltip above enlarged modal content */
+#chart-modal #tooltip {
+  z-index: 5005 !important;
+  pointer-events: none;
+}
+
+#chart-modal #tooltip-modal {
+  position: fixed !important;
+  z-index: 5006 !important;
+  pointer-events: none;
 }
 
 #chart-modal.open { display: block; }
@@ -346,6 +359,7 @@ html, body {
   inset: 0;
   background: rgba(0, 0, 0, 0.55);
   backdrop-filter: blur(10px);
+  z-index: 0;
 }
 
 #chart-modal-content {
@@ -360,6 +374,7 @@ html, body {
   border-radius: 14px;
   box-shadow: 0 18px 70px rgba(0, 0, 0, 0.65);
   overflow: hidden;
+  z-index: 1;
 }
 
 #chart-modal-close {
@@ -678,6 +693,12 @@ html, body {
   z-index: 1000;
   box-shadow: 0 8px 40px rgba(0, 0, 0, 0.65);
   backdrop-filter: blur(8px);
+}
+
+/* Ensure explore tooltips stay above modals */
+#tooltip,
+#galaxy-tooltip {
+  z-index: 3001 !important;
 }
 
 /* ── Animations ────────────────────────────────────────────── */

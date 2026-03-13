@@ -17,7 +17,9 @@ let allWorkers = [];
 
 // ── Tooltip pinning (click-to-keep) ───────────────────────────
 function getTooltipEl() {
-  return document.getElementById("tooltip");
+  return window.__getActiveTooltip?.()
+    || document.getElementById("tooltip-modal")
+    || document.getElementById("tooltip");
 }
 
 function positionTooltip(tip, x, y) {
@@ -91,7 +93,13 @@ export function initLinkedViews(workers) {
       updateBubbleChart(subset);
       updateAgeRing(subset);
       updateBurnoutBars(subset);
-    }
+    },
+    initBubbleChart: (w) => initBubbleChart(w),
+    updateBubbleChart: (s) => updateBubbleChart(s),
+    initAgeRing: (w) => initAgeRing(w),
+    updateAgeRing: (s) => updateAgeRing(s),
+    initBurnoutBars: (w) => initBurnoutBars(w),
+    updateBurnoutBars: (s) => updateBurnoutBars(s)
   };
 }
 
@@ -180,7 +188,6 @@ function initBubbleChart(workers) {
 }
 
 function renderBubbles(subset, opacity) {
-  const tip = document.getElementById("tooltip");
   // Sample for perf — max 600 bubbles
   const sample = subset.length > 600
     ? subset.filter((_, i) => i % Math.ceil(subset.length / 600) === 0)
@@ -210,10 +217,9 @@ function renderBubbles(subset, opacity) {
         .attr("r", brScale(d.burnout) * 1.8)
         .attr("opacity", 1)
         .attr("stroke", "white").attr("stroke-width", 1);
+      const tip = getTooltipEl();
       if (tip) {
         tip.style.opacity = "1";
-        tip.style.left = `${event.clientX + 12}px`;
-        tip.style.top  = `${event.clientY - 8}px`;
         tip.innerHTML = `
           <div style="color:${COLORS[d.cluster]};font-weight:700;margin-bottom:6px;font-size:10px">
             ${NAMES[d.cluster]}
@@ -224,6 +230,7 @@ function renderBubbles(subset, opacity) {
             Wellbeing: <strong>${d.wellbeing.toFixed(2)}</strong> /6<br>
             Burnout: <strong>${d.burnout.toFixed(2)}</strong> /7
           </div>`;
+        positionTooltip(tip, event.clientX, event.clientY);
       }
     })
     .on("mouseout", function(event, d) {
@@ -232,6 +239,7 @@ function renderBubbles(subset, opacity) {
         .attr("r", brScale(d.burnout))
         .attr("opacity", opacity * 0.55)
         .attr("stroke", "none");
+      const tip = getTooltipEl();
       if (tip) tip.style.opacity = "0";
     });
 }
@@ -302,8 +310,6 @@ function renderRing(subset) {
     const pie = d3.pie().value(d => d.value).sort(null)(pieData);
     const arc = d3.arc().innerRadius(ring.inner).outerRadius(ring.outer).padAngle(0.025);
 
-    const tip = document.getElementById("tooltip");
-
     rg.selectAll(`.ring-arc-${ring.age.replace("+", "p")}`)
       .data(pie)
       .join("path")
@@ -320,10 +326,9 @@ function renderRing(subset) {
         if (window.__tooltipPinned) return;
         d3.select(this).transition().duration(100).attr("opacity", 1);
         const pct = ((d.data.value / total) * 100).toFixed(1);
+        const tip = getTooltipEl();
         if (tip) {
           tip.style.opacity = "1";
-          tip.style.left = `${event.clientX + 12}px`;
-          tip.style.top  = `${event.clientY - 8}px`;
           tip.innerHTML = `
             <div style="color:${COLORS[d.data.cluster]};font-weight:700;margin-bottom:5px;font-size:10px">
               ${NAMES[d.data.cluster]}
@@ -333,11 +338,13 @@ function renderRing(subset) {
               Count: <strong>${d.data.value.toLocaleString()}</strong><br>
               Share of age group: <strong>${pct}%</strong>
             </div>`;
+          positionTooltip(tip, event.clientX, event.clientY);
         }
       })
       .on("mouseout", function() {
         if (window.__tooltipPinned) return;
         d3.select(this).transition().duration(150).attr("opacity", 0.75);
+        const tip = getTooltipEl();
         if (tip) tip.style.opacity = "0";
       });
   });
@@ -449,7 +456,6 @@ function computeBurnoutByIndustry(subset) {
 
 function renderBars(subset) {
   const data = computeBurnoutByIndustry(subset);
-  const tip  = document.getElementById("tooltip");
   const bw   = iyScale.bandwidth() / 3.2;
 
   ig.selectAll(".bar-group").remove();
@@ -503,15 +509,16 @@ function renderBars(subset) {
       bar.on("mouseover", function(event) {
         if (window.__tooltipPinned) return;
         d3.select(this).transition().duration(100).attr("opacity", 1);
+        const tip = getTooltipEl();
         if (tip) {
           tip.style.opacity = "1";
-          tip.style.left = `${event.clientX + 12}px`;
-          tip.style.top  = `${event.clientY - 8}px`;
           tip.innerHTML = tooltipHtml;
+          positionTooltip(tip, event.clientX, event.clientY);
         }
       }).on("mouseout", function() {
         if (window.__tooltipPinned) return;
         d3.select(this).transition().duration(150).attr("opacity", 0.72);
+        const tip = getTooltipEl();
         if (tip) tip.style.opacity = "0";
       }).on("click", function(event) {
         event.stopPropagation();
