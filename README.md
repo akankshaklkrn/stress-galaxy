@@ -94,7 +94,7 @@ To see the full project in ~5 minutes:
 ## Key Features
 
 ### Galaxy View (`explore.html`)
-- **5,000 stars** — color = cluster, size = stress level, opacity = available resources, pulse speed = burnout severity
+- **5,000 stars** — color = cluster, size = stress level, opacity = available resources (burnout is reflected in linked charts and worker metrics)
 - **4 layout morphs** via top toolbar:
   - `GALAXY` — UMAP similarity layout (default)
   - `STRESS AXIS` — X axis = stress score, Y = cluster band
